@@ -10,6 +10,18 @@ Class {
 	#tag : 'Data'
 }
 
+{ #category : 'instance creation' }
+HyPackage class >> fromJsonDictionary: aDict [
+
+    | instance |
+
+    instance := self new.
+    instance name: (aDict at: 'package').
+    (aDict at: 'classes') do: [ :classDict |
+        instance addClass: (HyClass fromJsonDictionary: classDict) ].
+    ^ instance
+]
+
 { #category : 'adding' }
 HyPackage >> addClass: newClass [
 
@@ -31,6 +43,15 @@ HyPackage >> addClasses: newClasses [
 
 	self classes ifEmpty: [^ self classes add: newClasses; yourself].
 	newClasses do: [ : newClass | self addClass: newClass]
+]
+
+{ #category : 'adding' }
+HyPackage >> asJsonDictionary [
+
+    ^ Dictionary new
+        at: 'package' put: name;
+        at: 'classes' put: (classes collect: [ :cls | cls asJsonDictionary ]) asArray;
+        yourself
 ]
 
 { #category : 'adding' }
@@ -69,6 +90,7 @@ HyPackage >> hasClassNamed: className [
 { #category : 'adding' }
 HyPackage >> initialize [ 
 
+	super initialize.
 	classes := OrderedCollection new. 
 ]
 
@@ -98,10 +120,6 @@ HyPackage >> removeClassNamed: className [
 	(self hasClassNamed: className) 
 		ifTrue: [ classes remove: (self getClassNamed: className) ]
 		
-]
-
-{ #category : 'as yet unclassified' }
-HyPackage >> toJSON [ 
 ]
 
 { #category : 'as yet unclassified' }

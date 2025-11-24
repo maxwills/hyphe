@@ -1,5 +1,5 @@
 Class {
-	#name : 'HyVariable',
+	#name : 'HyParameter',
 	#superclass : 'HyEntity',
 	#category : 'Hyphe-Data',
 	#package : 'Hyphe',

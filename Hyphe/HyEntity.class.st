@@ -6,7 +6,12 @@ Class {
 	#tag : 'Data'
 }
 
-{ #category : 'accessing' }
-HyEntity >> toJSON [ 
+{ #category : 'instance creation' }
+HyEntity class >> fromJsonDictionary: aDict [
+	self subclassResponsibility 
+]
+
+{ #category : 'converting' }
+HyEntity >> asJsonDictionary [ 
 	self subclassResponsibility 
 ]

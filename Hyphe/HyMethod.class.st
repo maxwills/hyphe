@@ -11,11 +11,62 @@ Class {
 	#tag : 'Data'
 }
 
+{ #category : 'instance creation' }
+HyMethod class >> fromJsonDictionary: aDict [
+    | instance |
+    instance := self new.
+    instance name: (aDict at: 'name').
+    
+    "(aDict at: 'parameters' ifAbsent: [ #() ]) do: [ :paramDict |
+        instance addParameter: (HyParameter fromJsonDictionary: paramDict) ]."
+    
+    (aDict at: 'returnTypes' ifAbsent: [ #() ]) do: [ :typeDict |
+        instance addReturnType: (HyType fromJsonDictionary: typeDict) ].
+    
+    ^ instance
+]
+
+{ #category : 'adding' }
+HyMethod >> addReturnType: typeObj [
+
+	typeObj source ifNotNil: [ 
+		(self hasReturnTypesNamed: typeObj name fromSource: typeObj source)
+		ifFalse: [
+				returnTypes add: (HyType new
+						 name: typeObj name;
+						 source: typeObj source;
+						 yourself) ] ]
+	ifNil: [ 
+		(self hasReturnTypesNamed: typeObj name)
+		ifFalse: [
+				returnTypes add: (HyType new
+						 name: typeObj name;
+						 yourself) ]
+		 ].
+]
+
 { #category : 'adding' }
 HyMethod >> addReturnType: typeName source: sourceName [
 
 	(returnTypes hasReturnTypesNamed: typeName fromSource: sourceName) 
 		ifFalse: [ returnTypes add: (HyType new name: typeName; source: sourceName; yourself) ] 
+]
+
+{ #category : 'accessing' }
+HyMethod >> asJsonDictionary [
+    
+	| dict |
+ 
+   dict := Dictionary new
+        at: 'name' put: name;
+        yourself.
+    
+    parameters ifNotEmpty: [
+        dict at: 'parameters' put: (parameters collect: [ :param | param asJsonDictionary ]) asArray ].
+    returnTypes ifNotEmpty: [
+        dict at: 'returnTypes' put: (returnTypes collect: [ :type | type asJsonDictionary ]) asArray ].
+    
+    ^ dict
 ]
 
 { #category : 'adding' }
@@ -54,6 +105,13 @@ HyMethod >> hasReturnTypesNamed: typeName fromSource: sourceName [
 ]
 
 { #category : 'accessing' }
+HyMethod >> initialize [
+
+	super initialize.
+	returnTypes := parameters := OrderedCollection new
+]
+
+{ #category : 'accessing' }
 HyMethod >> name [
 
 	^ name
@@ -87,8 +145,4 @@ HyMethod >> returnTypes [
 HyMethod >> returnTypes: anObject [
 
 	returnTypes := anObject
-]
-
-{ #category : 'accessing' }
-HyMethod >> toJSON [
 ]

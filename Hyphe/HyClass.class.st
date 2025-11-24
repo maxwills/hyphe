@@ -12,6 +12,20 @@ Class {
 	#tag : 'Data'
 }
 
+{ #category : 'instance creation' }
+HyClass class >> fromJsonDictionary: aDict [
+
+	| instance |
+	instance := self new.
+	instance name: (aDict at: 'class').
+	"instance superclass: (aDict at: 'superclass')."
+	(aDict at: 'methods') do: [ :methodD |
+		instance addMethod: (HyMethod fromJsonDictionary: methodD) ].
+	"(aDict at: 'variables') do: [ :variableDict |
+		instance addVariable: (HyVariable fromJsonDictionary: variableDict) ]."
+	^ instance
+]
+
 { #category : 'adding' }
 HyClass >> addMethod: methodObj [
 
@@ -28,6 +42,33 @@ HyClass >> addMethods: methodsCollection [
 ]
 
 { #category : 'adding' }
+HyClass >> asJsonDictionary [
+
+	^ Dictionary new
+		  at: 'class' put: name;
+		  "at: 'superclass' put: superclass;"
+		  at: 'variables' put: (variables collect: [ :var | var asJsonDictionary ]) asOrderedCollection;
+        at: 'methods' put: (methods collect: [ :method | method asJsonDictionary ]) asOrderedCollection;
+		  yourself
+]
+
+{ #category : 'adding' }
+HyClass >> createMethod: methodName [
+
+	^ methods add: (HyMethod new
+			 name: methodName;
+			 yourself)
+]
+
+{ #category : 'adding' }
+HyClass >> findOrCreateMethod: methodName [
+
+	(methods anySatisfy: [ :c | c name = methodName ])
+		ifFalse: [ ^ self createMethod: methodName ]
+		ifTrue: [ ^ self getMethodNamed: methodName ]
+]
+
+{ #category : 'adding' }
 HyClass >> getMethodNamed: methodName [
 
 	^ (methods select: [ :c | c name = methodName ]) first
@@ -37,6 +78,13 @@ HyClass >> getMethodNamed: methodName [
 HyClass >> hasMethodNamed: methodName [
 
 	^ methods anySatisfy: [ :c | c name = methodName ] 
+]
+
+{ #category : 'initialization' }
+HyClass >> initialize [
+
+	super initialize.
+	methods := variables := OrderedCollection new.
 ]
 
 { #category : 'accessing' }
@@ -87,10 +135,6 @@ HyClass >> superclass [
 HyClass >> superclass: anObject [
 
 	superclass := anObject
-]
-
-{ #category : 'adding' }
-HyClass >> toJSON [ 
 ]
 
 { #category : 'adding' }
