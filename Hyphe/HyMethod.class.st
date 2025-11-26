@@ -4,7 +4,8 @@ Class {
 	#instVars : [
 		'name',
 		'parameters',
-		'returnTypes'
+		'returnTypes',
+		'confidence'
 	],
 	#category : 'Hyphe-Data',
 	#package : 'Hyphe',
@@ -69,6 +70,18 @@ HyMethod >> asJsonDictionary [
     ^ dict
 ]
 
+{ #category : 'accessing' }
+HyMethod >> confidence [
+
+	^ confidence
+]
+
+{ #category : 'accessing' }
+HyMethod >> confidence: anObject [
+
+	confidence := anObject
+]
+
 { #category : 'adding' }
 HyMethod >> getReturnTypeNamed: typeName fromSource: sourceName [
 
@@ -108,7 +121,8 @@ HyMethod >> hasReturnTypesNamed: typeName fromSource: sourceName [
 HyMethod >> initialize [
 
 	super initialize.
-	returnTypes := parameters := OrderedCollection new
+	returnTypes := OrderedCollection new.
+	parameters := OrderedCollection new
 ]
 
 { #category : 'accessing' }

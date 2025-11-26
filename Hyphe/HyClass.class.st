@@ -84,7 +84,8 @@ HyClass >> hasMethodNamed: methodName [
 HyClass >> initialize [
 
 	super initialize.
-	methods := variables := OrderedCollection new.
+	methods := OrderedCollection new.
+	variables := OrderedCollection new
 ]
 
 { #category : 'accessing' }
@@ -158,4 +159,16 @@ HyClass >> updateMethods: newMethodsCollection [
 { #category : 'accessing' }
 HyClass >> updateVariables: newVariables [
 	
+]
+
+{ #category : 'accessing' }
+HyClass >> variables [
+
+	^ variables
+]
+
+{ #category : 'accessing' }
+HyClass >> variables: anObject [
+
+	variables := anObject
 ]
