@@ -16,7 +16,7 @@ Class {
 InferenceResultsExporter class >> export: results to: aHyDataRepresentation [
     "Export results to HyDataRepresentation, updating existing data"
     ^ self new
-        results: results;
+        source: results;
         hyDataRepresentation: aHyDataRepresentation;
         export;
         yourself

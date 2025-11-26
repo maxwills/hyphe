@@ -49,7 +49,7 @@ HyMethod >> addReturnType: typeObj [
 { #category : 'adding' }
 HyMethod >> addReturnType: typeName source: sourceName [
 
-	(returnTypes hasReturnTypesNamed: typeName fromSource: sourceName) 
+	(self hasReturnTypesNamed: typeName fromSource: sourceName) 
 		ifFalse: [ returnTypes add: (HyType new name: typeName; source: sourceName; yourself) ] 
 ]
 

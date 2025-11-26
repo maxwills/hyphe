@@ -9,7 +9,7 @@ Class {
 { #category : 'initialization' }
 TITResultsExporter >> doExport [
 
-	(source methodsByPackages) methodsByPackages keysAndValuesDo: [ :package :methods | self processPackageMethods: package methods: methods ].
+	source keysAndValuesDo: [ :package :methods | self processPackageMethods: package methods: methods ].
 ]
 
 { #category : 'initialization' }
@@ -43,6 +43,6 @@ TITResultsExporter >> processPackageMethods: package methods: methods [
 			typeName ifNotNil: [
 					hyClass := self findOrCreateClass: className inPackage: hyPackage.
 					hyMethod := hyClass findOrCreateMethod: (titMethod name).
-					hyMethod addReturnType: typeName ] 
+					hyMethod addReturnType: typeName source: defaultSource ] 
 				]
 ]
