@@ -19,13 +19,13 @@ BaselineOfHyphe >> baseline: spec [
 			spec
 				package: #Hyphe
 					with: [ spec requires: #( 'TypeMe' 'MethodProxies' 'Mycelium') ];
-				package: 'Hyphe-Tests' 
+				package: #'Hyphe-Tests' 
 					with: [ spec requires: #( 'Hyphe' ) ];
 				package: #Mycelium 
 					with: [ spec repository: 'github://hyalinos/mycelium:main' ].
 		
 			spec
-				group: 'Core' with: #( 'Hyphe' Hyphe-Tests );
-				group: 'default' with: #( 'Hyphe' Hyphe-Tests ) 
+				group: 'Core' with: #( 'Hyphe' 'Hyphe-Tests' );
+				group: 'default' with: #( 'Hyphe' 'Hyphe-Tests' ) 
 	]
 ]
