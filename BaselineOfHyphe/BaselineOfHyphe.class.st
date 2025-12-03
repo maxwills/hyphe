@@ -10,30 +10,24 @@ BaselineOfHyphe >> baseline: spec [
 
 	<baseline>
 	spec for: #common do: [
-		spec baseline: 'TypeInfoTools' with: [
 			spec
-				repository: 'github://JanBliznicenko/TypeInfoTools:main';
-				loads: #( returntypes ) ].
+				baseline: 'TypeMe'
+				with: [ spec repository: 'github://lsafina/typeMe:main' ].
 
-		spec
-			baseline: 'NeoCSV'
-			with: [ spec repository: 'github://svenvc/NeoCSV' ].
-
-		spec
-			baseline: 'LLMAPI'
-			with: [
-			spec repository: 'github://JanBliznicenko/Pharo-LLMAPI:main' ].
-
-		spec
-			baseline: 'TypeMe'
-			with: [
-			spec repository: 'github://lsafina/typeMeI:main' ].
-
-		spec
-			package: #Hyphe
-			with: [ spec requires: #( 'TypeInfoTools' 'NeoCSV' 'LLMAPI' 'TypeMe' ) ];
-			package: #'Hyphe-Tests' with: [ spec requires: #( 'Hyphe' ) ].
-		spec
-			group: 'Core' with: #( 'Hyphe' 'Hyphe-Tests' );
-			group: 'default' with: #( 'Hyphe' 'Hyphe-Tests' ) ]
+			spec 
+    			baseline: 'MethodProxies' 
+   	 			with: [ spec repository: 'github://pharo-contributions/MethodProxies/src' ].
+				
+			spec
+    			package: 'Mycelium' with: [
+      			spec repository: 'github://hyalinos/mycelium:main' ].
+			
+			spec
+				package: #Hyphe
+				with: [
+					spec requires: #( 'TypeMe' 'MethodProxies' 'Mycelium') ];
+				package: #'Hyphe-Tests' with: [ spec requires: #( 'Hyphe' ) ].
+			spec
+				group: 'Core' with: #( 'Hyphe' 'Hyphe-Tests' );
+				group: 'default' with: #( 'Hyphe' 'Hyphe-Tests' ) ]
 ]
