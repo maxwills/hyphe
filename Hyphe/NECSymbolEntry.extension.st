@@ -3,7 +3,14 @@ Extension { #name : 'NECSymbolEntry' }
 { #category : '*Hyphe' }
 NECSymbolEntry class >> new [
 |object|
-object:= HypheNECSymbolEntry basicNew.
+(self == NECSymbolEntry )
+	ifTrue: [ 
+		object:= HypheNECSymbolEntry basicNew.
+		object initialize.
+		"Transcript show: self name."
+		^object].
+"Transcript show: self name."
+object:= self basicNew.
 object initialize.
-^object
+^object.
 ]
