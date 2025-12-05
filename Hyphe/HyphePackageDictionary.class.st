@@ -8,7 +8,13 @@ Class {
 
 { #category : 'as yet unclassified' }
 HyphePackageDictionary class >> cleanUpInjection [
-"TODO: find all instances of IceWorkingCopy, and replace the packagesDictionary with actual dictionaries using reflection on its instance variable: #packages"
+    "Replace all HyphePackageDictionary instances with regular dictionaries in all IceWorkingCopy instances"
+    IceRepository registry do: [ :repo |
+        | workingCopy packagesDict |
+        workingCopy := repo workingCopy.
+        packagesDict := workingCopy instVarNamed: #packages.
+        (packagesDict isKindOf: HyphePackageDictionary) ifTrue: [
+            workingCopy instVarNamed: #packages put: packagesDict asDictionary ] ]
 ]
 
 { #category : 'instance creation' }
@@ -18,6 +24,14 @@ HyphePackageDictionary class >> newFromDictionary: aDictionary [
     newDic := self new.
     newDic addAll: aDictionary.
     ^ newDic
+]
+
+{ #category : 'as yet unclassified' }
+HyphePackageDictionary class >> restoreOriginalMethod [
+    "Restore the original packagesDictionary method by removing the extension and recompiling the original"
+    "Recompile the original method - it will automatically be in the Iceberg package since IceWorkingCopy is defined there"
+    IceWorkingCopy compile: 'packagesDictionary
+	^ packages' classified: 'private - packages'.
 ]
 
 { #category : 'converting' }
