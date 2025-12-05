@@ -7,8 +7,6 @@ Class {
 
 { #category : 'install/uninstall' }
 ManifestHyphe class >> unload [
-    "Clean up Hyphe injection before package removal"
-    HyphePackageDictionary cleanUpInjection.
-    HyphePackageDictionary restoreOriginalMethod.
+    "Clean up before package removal"
     HypheIcebergEventHandler ifNotNil: [ HypheIcebergEventHandler unsubscribe ]
 ]
