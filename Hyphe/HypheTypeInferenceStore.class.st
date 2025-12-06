@@ -7,9 +7,9 @@ Class {
 	#classVars : [
 		'UniqueInstance'
 	],
-	#category : 'Hyphe-Inference',
+	#category : 'Hyphe-StaticInference',
 	#package : 'Hyphe',
-	#tag : 'Inference'
+	#tag : 'StaticInference'
 }
 
 { #category : 'accessing' }
@@ -81,8 +81,36 @@ HypheTypeInferenceStore >> inferenceForClassName: aClassName selector: aSelector
 	| key |
 	
 		key := aClassName asString , '>' , '>' , aSelector asString.
-		^inferenceData at: key ifAbsent: [Transcript showCr:'keyNotFound: ',key . nil ].
+		^inferenceData at: key ifAbsent: [HypheLogger showCr:'keyNotFound: ',key . nil ].
 		
+]
+
+{ #category : 'querying' }
+HypheTypeInferenceStore >> inferenceForClassName: aClassName selector: aSelector withFallback: useFallback [
+    "Return {inferredType. confidence} or nil if not found.
+     If withFallback is true and exact match not found, try *r>>selector as fallback.
+     Lookup strategy:
+       1. Try exact match: ClassName>>selector
+       2. If useFallback and not found: try *r>>selector (generic)"
+    | key result |
+    
+    "Try exact match first"
+    key := aClassName asString , '>>' , aSelector asString.
+    result := inferenceData at: key ifAbsent: [ nil ].
+    result ifNotNil: [ ^ result ].
+    
+    "If fallback enabled, try generic *r>>selector entry"
+    useFallback ifTrue: [
+        key := '*r>>' , aSelector asString.
+        result := inferenceData at: key ifAbsent: [ nil ].
+        result ifNotNil: [ 
+            HypheLogger showCr: '    Using fallback *r entry for selector: ', aSelector asString.
+            ^ result ].
+    ].
+    
+    "Not found"
+    HypheLogger showCr: '    Key not found: ', aClassName asString, '>>', aSelector asString.
+    ^ nil
 ]
 
 { #category : 'querying' }

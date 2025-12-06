@@ -39,5 +39,5 @@ HypheNECSettings class >> mediumConfidenceColor [
 
 { #category : 'as yet unclassified' }
 HypheNECSettings class >> verboseMode [
-^false
+^true
 ]
