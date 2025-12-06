@@ -26,6 +26,7 @@ HypheTypeInferenceStore class >> current [
 
 { #category : 'accessing' }
 HypheTypeInferenceStore class >> reload [
+<script>
 	"Force reload the CSV data"
 	self reset.
 	^ self current
@@ -74,6 +75,17 @@ HypheTypeInferenceStore >> inferenceForClass: aClass selector: aSelector [
 ]
 
 { #category : 'querying' }
+HypheTypeInferenceStore >> inferenceForClassName: aClassName selector: aSelector [
+	"Return {inferredType. confidence} or nil if not found.
+	 Searches for exact class match first, then walks superclass chain."
+	| key |
+	
+		key := aClassName asString , '>' , '>' , aSelector asString.
+		^inferenceData at: key ifAbsent: [Transcript showCr:'keyNotFound: ',key . nil ].
+		
+]
+
+{ #category : 'querying' }
 HypheTypeInferenceStore >> inferredTypeForClass: aClass selector: aSelector [
 	"Return the inferred type string or nil"
 	| result |
@@ -93,7 +105,7 @@ HypheTypeInferenceStore >> loadFromCSV [
 	| csvFile lines |
 	inferenceData := Dictionary new.
 	csvFile := self class csvPath.
-	csvFile exists ifFalse: [ ^ self ].
+	csvFile exists ifFalse: [Transcript showCr: 'Hyphe: typeToConfidence.csv not found.'. ^ self ].
 	
 	lines := csvFile contents lines.
 	lines size > 1 ifFalse: [ ^ self ].

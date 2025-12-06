@@ -54,7 +54,7 @@ HypheNECSymbolEntry class >> getReceiverClassName: aNode [
 HypheNECSymbolEntry class >> overrideFor: necEntry methodSourceDescription: aClass method: aCompiledMethod [
 	"I return if it''s a class or a method, its class name, and the implementation.
 	 Now uses HypheTypeInferenceStore for type inference data."
-	| styler styledText inferredType confidence labelText color coloredLabel typeStart confidenceStart store inferenceResult receiverInfo|
+	| styler styledText inferredType confidence labelText color coloredLabel typeStart confidenceStart store inferenceResult receiverInfo receiverClassName|
 
 	styler := SHRBTextStyler new.
 	styler classOrMetaClass: aClass.
@@ -62,10 +62,11 @@ HypheNECSymbolEntry class >> overrideFor: necEntry methodSourceDescription: aCla
 	
 	"Get method information"
 	receiverInfo:= (HypheNECSettings verboseMode) ifTrue:[self getOriginInfoString: necEntry hyNode class: aClass selector: aCompiledMethod selector] ifFalse:['method']. 
-	
+	receiverClassName := self getReceiverClassName:  necEntry hyNode.
+	Transcript showCr: 'Class name: ', receiverClassName .
 	"Lookup inference data from store"
 	store := HypheTypeInferenceStore current.
-	inferenceResult := store inferenceForClass: aClass selector: aCompiledMethod selector.
+	inferenceResult := store inferenceForClassName: receiverClassName selector: aCompiledMethod selector.
 	
 	inferenceResult 
 		ifNotNil: [
