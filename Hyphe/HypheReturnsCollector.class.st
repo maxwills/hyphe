@@ -8,7 +8,10 @@ Class {
 		'instrumentedMethods',
 		'installedLinks',
 		'collectionsData',
-		'methodToCompiledMethod'
+		'methodToCompiledMethod',
+		'propagationLinkCache',
+		'recordingLinkCache',
+		'instrumentedMethodObjects'
 	],
 	#classVars : [
 		'ActiveCollector'
@@ -32,22 +35,6 @@ HypheReturnsCollector class >> on: aTestCase [
     ^ self new initializeWith: aTestCase
 ]
 
-{ #category : 'metalink callbacks' }
-HypheReturnsCollector class >> propagateFrom: aReceiver with: aSelector [
-    "Called by before links - delegates to active collector"
-    self activeCollector ifNotNil: [ :collector |
-        collector propagateFrom: aReceiver with: aSelector
-    ]
-]
-
-{ #category : 'metalink callbacks' }
-HypheReturnsCollector class >> record: returnValue from: aReceiver selector: aSelector [
-    "Called by after links - delegates to active collector"
-    self activeCollector ifNotNil: [ :collector |
-        collector record: returnValue from: aReceiver selector: aSelector
-    ]
-]
-
 { #category : 'cleanup' }
 HypheReturnsCollector >> cleanup [
     logger log: 'Cleaning up instrumentation (', instrumentedMethods size asString, ' methods, ', installedLinks size asString, ' links)'.
@@ -69,10 +56,12 @@ HypheReturnsCollector >> cleanup [
 
 { #category : 'initialization' }
 HypheReturnsCollector >> initializeWith: aTestCase [
+    "Initialize the collector for a test case"
     testCase := aTestCase.
     logger := HypheReturnsCollectorLogger new.
     result := HypheReturnsCollectorResult new.
     instrumentedMethods := IdentitySet new.
+    instrumentedMethodObjects := OrderedCollection new.  "Keep strong references!"
     installedLinks := OrderedCollection new.
     collectionsData := OrderedCollection new.
     methodToCompiledMethod := Dictionary new.
@@ -81,77 +70,80 @@ HypheReturnsCollector >> initializeWith: aTestCase [
 
 { #category : 'instrumentation' }
 HypheReturnsCollector >> instrumentMethod: aCompiledMethod [
-    | methodAst afterLink methodSelector methodClass sendNodes |
+    "Instrument a method by linking:
+    1. Send nodes → propagation (works!)
+    2. Return nodes → recording (survives method replacement!)"
+    | methodAst sendNodes returnNodes methodSelector methodClass propLink recLink |
     
+    "Skip if already instrumented or is primitive"
     (instrumentedMethods includes: aCompiledMethod) ifTrue: [ ^ self ].
-    
     aCompiledMethod isPrimitive ifTrue: [ 
         instrumentedMethods add: aCompiledMethod.
         ^ self 
     ].
     
+    "Mark as instrumented"
     instrumentedMethods add: aCompiledMethod.
     
     methodSelector := aCompiledMethod selector.
     methodClass := aCompiledMethod methodClass.
     
-    logger log: 'Instrumenting: ', methodClass name, '>>', methodSelector.
+    logger log: '[INSTRUMENT] ', methodClass name, '>>', methodSelector.
     
+    "Get AST, send nodes, and return nodes"
     methodAst := aCompiledMethod ast.
     sendNodes := methodAst sendNodes.
+    returnNodes := methodAst allChildren select: [ :node | node isReturn ].
     
-    methodToCompiledMethod at: methodAst put: aCompiledMethod.
+    logger log: '[INSTRUMENT] Found ', sendNodes size asString, ' sends, ', returnNodes size asString, ' returns'.
     
-    logger log: 'Installing before links on ', sendNodes size asString, ' send nodes'.
+    "Get the links"
+    propLink := self propagationLink.
+    recLink := self recordingLink.
+    
+    "Install propagation link on each send node"
     sendNodes do: [ :sendNode |
-        [
-            | beforeLink |
-            logger log: 'Creating before link for: ', sendNode selector asString.
-            
-            beforeLink := MetaLink new
-                metaObject: [ :rcv :sel | 
-                    | collector |
-                    collector := HypheReturnsCollector activeCollector.
-                    collector ifNotNil: [ 
-                        collector propagateFrom: rcv with: sel
-                    ]
-                ];
-                selector: #value:value:;
-                arguments: #(receiver selector);
-                control: #before.
-            installedLinks add: beforeLink.
-            sendNode link: beforeLink.
-            logger log: 'Linked before link'
-        ] on: Error do: [ :ex |
-            logger log: 'ERROR: ', ex messageText
-        ]
+        (sendNode hasMetalink: propLink) 
+            ifFalse: [ 
+                sendNode link: propLink.
+                logger log: '[INSTRUMENT] Linked send: ', sendNode selector asString
+            ]
     ].
     
-    [
-        afterLink := MetaLink new
-            metaObject: [ :val :rcv :sel | 
-                | collector |
-                collector := HypheReturnsCollector activeCollector.
-                collector ifNotNil: [
-                    collector record: val from: rcv sel: sel in: methodClass
-                ]
-            ];
-            selector: #value:value:value:;
-            arguments: #(value receiver selector);
-            control: #after.
-        installedLinks add: afterLink.
-        methodAst link: afterLink.
-        logger log: 'Linked after link'
-    ] on: Error do: [ :ex |
-        logger log: 'ERROR: ', ex messageText
+    "Install recording link on RETURN NODES instead of method AST!"
+    returnNodes do: [ :returnNode |
+        (returnNode hasMetalink: recLink)
+            ifFalse: [
+                returnNode link: recLink.
+                logger log: '[INSTRUMENT] Linked return node'
+            ]
+    ].
+    
+    "If no explicit returns, link the method AST (implicit return)"
+    returnNodes ifEmpty: [
+        (methodAst hasMetalink: recLink)
+            ifFalse: [
+                methodAst link: recLink.
+                logger log: '[INSTRUMENT] Linked method (implicit return)'
+            ]
     ]
 ]
 
 { #category : 'instrumentation' }
 HypheReturnsCollector >> instrumentTestCase [
-    | testMethod |
-    logger log: 'Instrumenting test case method'.
-    testMethod := testCase class >> testCase selector.
+    "Instrument the test method. CRITICAL: Use lookupSelector: to get the right method!"
+    | testMethod testSelector testClass |
+    
+    testSelector := testCase selector.
+    testClass := testCase class.
+    
+    logger log: '[INSTRUMENT TEST] Looking up ', testClass name, '>>', testSelector.
+    
+    "Use lookupSelector: to get the actual method that will execute"
+    testMethod := testClass lookupSelector: testSelector.
+    
+    logger log: '[INSTRUMENT TEST] Found method in class: ', testMethod methodClass name.
+    
     self instrumentMethod: testMethod
 ]
 
@@ -161,64 +153,99 @@ HypheReturnsCollector >> logger [
 ]
 
 { #category : 'instrumentation' }
-HypheReturnsCollector >> propagateFrom: aReceiver with: aSelector [
-    [
-        | compiledMethod |
-        
-        logger log: '[PROPAGATE] Called with receiver: ', aReceiver class name, ' selector: ', aSelector asString.
-        
-        "Lookup the method that will be executed"
-        compiledMethod := aReceiver class lookupSelector: aSelector.
-        
-        compiledMethod ifNil: [ 
-            logger log: '[PROPAGATE] DNU detected for selector: ', aSelector.
-            ^ self 
-        ].
-        
-        logger log: '[PROPAGATE] Found method: ', compiledMethod methodClass name, '>>', compiledMethod selector.
-        
-        "Propagate instrumentation to the called method"
-        self instrumentMethod: compiledMethod.
-        
-        logger log: '[PROPAGATE] Instrumentation complete for: ', aSelector asString
-    ] on: Error do: [ :ex |
-        logger log: '[PROPAGATE] Error in propagateFrom:with: ', ex messageText.
-        logger log: '[PROPAGATE] Stack: ', ex signalerContext shortStack asString
+HypheReturnsCollector >> propagateInstrumentationTo: aCompiledMethod [
+    "Called by MetaLink before a message send executes.
+    ALWAYS re-instrument because Pharo replaces ReflectiveMethods!"
+    
+    Transcript show: '[PROPAGATE] CALLBACK INVOKED for ', aCompiledMethod selector; cr.
+    logger log: '[PROPAGATE] Callback for: ', aCompiledMethod methodClass name, '>>', aCompiledMethod selector.
+    
+    "ALWAYS instrument - don't check if already done, because method might have been replaced"
+    "Remove from instrumentedMethods so instrumentMethod doesn't skip it"
+    instrumentedMethods remove: aCompiledMethod ifAbsent: [].
+    
+    self instrumentMethod: aCompiledMethod.
+    logger log: '[PROPAGATE] Done'
+]
+
+{ #category : 'instrumentation' }
+HypheReturnsCollector >> propagationLink [
+    "Returns the single propagation link used for all send nodes.
+    Pattern copied EXACTLY from SelfPropagatingLinkDemo - uses instance variable!"
+    
+    ^ propagationLinkCache ifNil: [
+        propagationLinkCache := MetaLink new
+            metaObject: self;
+            selector: #propagateInstrumentationTo:;
+            arguments: #(methodToExecute).
+        "Add to installedLinks for cleanup"
+        installedLinks add: propagationLinkCache.
+        propagationLinkCache
     ]
 ]
 
 { #category : 'data collection' }
-HypheReturnsCollector >> record: returnValue from: aReceiver sel: aSelector in: aMethodClass [
+HypheReturnsCollector >> recordReturn: returnValue from: aReceiver selector: aSelector definingClass: aDefiningClass [
+    "Record a return value from a method execution"
     [
         | receiverClass returnClass dataPoint |
+        
         receiverClass := aReceiver class.
         returnClass := returnValue class.
-        dataPoint := { receiverClass . aSelector . aMethodClass . returnClass }.
+        dataPoint := { receiverClass . aSelector . aDefiningClass . returnClass }.
         collectionsData add: dataPoint.
-        logger log: 'Collected: ', receiverClass name, ' >> ', aSelector, ' (method from: ', aMethodClass name, ', returns: ', returnClass name, ')'
+        
+        logger log: 'Recorded: ', receiverClass name, ' >> ', aSelector, 
+                    ' returns ', returnClass name, ' (from: ', aDefiningClass name, ')'.
     ] on: Error do: [ :ex |
-        logger log: 'Error in record:from:sel:in: ', ex messageText
+        logger log: 'Error recording return: ', ex messageText
     ]
 ]
 
 { #category : 'data collection' }
-HypheReturnsCollector >> record: returnValue from: aReceiver selector: aSelector [
+HypheReturnsCollector >> recordReturn: returnValue from: aReceiver selector: aSelector method: aCompiledMethod [
+    "Old recording method - kept for backward compatibility but not used"
+    self recordReturnValue: returnValue inMethod: aCompiledMethod
+]
+
+{ #category : 'data collection' }
+HypheReturnsCollector >> recordReturnValue: returnValue inMethod: aCompiledMethod [
+    "Record a return value from a return node.
+    Called with reifications available on return nodes."
     [
-        | receiverClass returnClass dataPoint compiledMethod methodClass |
+        | methodClass methodSelector receiverClass returnClass dataPoint |
         
-        "Look up the method to get its defining class"
-        compiledMethod := aReceiver class lookupSelector: aSelector.
-        methodClass := compiledMethod 
-            ifNotNil: [ compiledMethod methodClass ]
-            ifNil: [ aReceiver class "fallback" ].
+        methodClass := aCompiledMethod methodClass.
+        methodSelector := aCompiledMethod selector.
         
-        receiverClass := aReceiver class.
+        "For receiver class, we use the method's class (self's class)"
+        receiverClass := methodClass.
         returnClass := returnValue class.
-        dataPoint := { receiverClass . aSelector . methodClass . returnClass }.
+        
+        dataPoint := { receiverClass . methodSelector . methodClass . returnClass }.
         collectionsData add: dataPoint.
-        logger log: 'Collected: ', receiverClass name, ' >> ', aSelector, ' (method from: ', methodClass name, ', returns: ', returnClass name, ')'
+        
+        logger log: '[RECORD] ', methodClass name, ' >> ', methodSelector, 
+                    ' returns ', returnClass name.
     ] on: Error do: [ :ex |
-        logger log: 'Error in record:from:selector: ', ex messageText
+        logger log: '[RECORD] Error: ', ex messageText
+    ]
+]
+
+{ #category : 'instrumentation' }
+HypheReturnsCollector >> recordingLink [
+    "Returns the single recording link used for all return nodes.
+    Uses #before control and available reifications for return nodes."
+    
+    ^ recordingLinkCache ifNil: [
+        recordingLinkCache := MetaLink new
+            metaObject: self;
+            selector: #recordReturnValue:inMethod:;
+            arguments: #(value method);
+            control: #before.
+        "Add to installedLinks for cleanup"
+        installedLinks add: recordingLinkCache.
+        recordingLinkCache
     ]
 ]
 
