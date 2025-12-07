@@ -15,12 +15,14 @@ BaselineOfHyphe >> baseline: spec [
 					with: [ spec repository: 'github://lsafina/typeMe:main' ];
     			baseline: 'MethodProxies' 
    	 				with: [ spec repository: 'github://pharo-contributions/MethodProxies/src' ];
+				baseline: 'Hyphe-Tools' 
+   	 				with: [ spec repository: 'https://github.com/hyalinos/hyphe-tools.git/src' ];
 				baseline: 'TypeInfoTools'
-					with: [ spec repository: 'github://lsafina/TypeInfoTools:main'; loads: #(returntypes) ].
+					with: [ spec repository: 'github://lsafina/TypeInfoTools:main' ].
 			
 			spec
 				package: #Hyphe
-					with: [ spec requires: #( 'TypeMe' 'MethodProxies' 'TypeInfoTools') ];
+					with: [ spec requires: #( 'TypeMe' 'MethodProxies' 'TypeInfoTools' 'Hyphe-Tools') ];
 				package: #'Hyphe-Tests' 
 					with: [ spec requires: #( 'Hyphe' ) ];
 				package: #Mycelium 
