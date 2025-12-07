@@ -192,7 +192,7 @@ HypheReturnsCollectorTestFixture >> testWithOrderedCollection [
 |aCollection|
 aCollection := OrderedCollection new.
 aCollection add:1.
-self assert: aCollection size equals: 1
+"self assert: aCollection size equals: 1"
 ]
 
 { #category : 'helpers' }

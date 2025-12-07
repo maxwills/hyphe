@@ -47,7 +47,7 @@ HypheReturnsCollector >> cleanup [
             ]
         ].
         
-        installedLinks := OrderedCollection new.
+        installedLinks := HypheInternalCollection new.
         logger log: 'All links uninstalled'
     ] on: Error do: [ :ex |
         Transcript show: 'CRITICAL ERROR during cleanup: '; show: ex messageText; cr.
@@ -61,9 +61,9 @@ HypheReturnsCollector >> initializeForMethod: aCompiledMethod [
     logger := HypheReturnsCollectorLogger new.
     result := HypheReturnsCollectorResult new.
     instrumentedMethods := IdentitySet new.
-    instrumentedMethodObjects := OrderedCollection new.
-    installedLinks := OrderedCollection new.
-    collectionsData := OrderedCollection new.
+    instrumentedMethodObjects := HypheInternalCollection new.
+    installedLinks := HypheInternalCollection new.
+    collectionsData := HypheInternalCollection new.
     methodToCompiledMethod := Dictionary new.
     owningProcess := nil. "Set lazily during execution"
     logger log: 'HypheReturnsCollector initialized for method: ', aCompiledMethod printString
@@ -387,47 +387,39 @@ HypheReturnsCollector >> runOn: aReceiver method: aCompiledMethod [
 
 { #category : 'instrumentation' }
 HypheReturnsCollector >> shouldInstrumentMethod: aCompiledMethod [
-    "Return true if this method should be instrumented.
-    Skip methods with special pragmas that disable instrumentation.
-    Skip TestCase infrastructure and Exception handling to avoid freezing.
-    Wrap everything in error handler to prevent freezes."
-    
+    "Return true if this method should be instrumented."
     [
         | methodClass |
         
-        "Check for <primitive:...> pragma (primitive:, primitive:error:, etc)"
+        "Check for primitive pragmas"
         (aCompiledMethod pragmas anySatisfy: [ :pragma | 
             pragma selector asString beginsWith: 'primitive:' ]) ifTrue: [ ^ false ].
         
-        "Check for <noInstrumentation> pragma"
+        "Check for noInstrumentation pragma"
         (aCompiledMethod pragmas anySatisfy: [ :pragma | 
             pragma selector = #noInstrumentation ]) ifTrue: [ ^ false ].
         
-        "Check for <metaLinkOptions: #( #+ optionDisabledLink )> pragma"
+        "Check for optionDisabledLink pragma"
         (aCompiledMethod pragmas anySatisfy: [ :pragma | 
             pragma selector = #metaLinkOptions: and: [ 
                 pragma arguments notEmpty and: [
-                    pragma arguments first includes: #optionDisabledLink
-                ]
-            ]
-        ]) ifTrue: [ ^ false ].
+                    pragma arguments first includes: #optionDisabledLink ]]]) ifTrue: [ ^ false ].
         
         methodClass := aCompiledMethod methodClass.
         
-        "Skip Exception and Error classes - critical for error handling"
+        "Skip Exception classes"
         (methodClass notNil and: [ 
             methodClass includesBehavior: Exception ]) ifTrue: [ ^ false ].
         
-        "Skip BlockClosure and related classes - critical for control flow"
+        "Skip BlockClosure and related"
         (methodClass notNil and: [
             (#(BlockClosure FullBlockClosure Context Process Semaphore) 
                 includes: methodClass name) ]) ifTrue: [ ^ false ].
         
-        "Skip TestCase assertion and infrastructure methods to avoid freezing"
+        "Skip TestCase infrastructure"
         (methodClass notNil and: [ methodClass includesBehavior: TestCase ]) ifTrue: [
             | selector |
             selector := aCompiledMethod selector.
-            "Skip assertion methods and test infrastructure"
             (#(assert: deny: assert:equals: assert:description: deny:description:
                assert:identicalTo: deny:identicalTo:
                should: shouldnt: should:raise: shouldnt:raise:
@@ -439,31 +431,27 @@ HypheReturnsCollector >> shouldInstrumentMethod: aCompiledMethod [
                cleanUpInstanceVariables
                executeShould:inScopeOf:
                assertCollection:equals:
-               assertCollection:hasSameElements:) includes: selector) ifTrue: [ ^ false ]
-        ].
+               assertCollection:hasSameElements:) includes: selector) ifTrue: [ ^ false ]].
         
-        "Skip our own instrumentation classes"
+        "Skip our instrumentation classes INCLUDING HypheInternalCollection"
         (methodClass notNil and: [
             (#(HypheReturnsCollector HypheReturnsCollectorLogger 
-               HypheReturnsCollectorResult HypheReturnDataItem) 
+               HypheReturnsCollectorResult HypheReturnDataItem
+               HypheInternalCollection) 
                 includes: methodClass name) ]) ifTrue: [ ^ false ].
         
-        "Skip Transcript (StThreadSafeTranscript) - uses mutex causing deadlocks"
+        "Skip Transcript"
         (methodClass notNil and: [
-            methodClass name = #StThreadSafeTranscript
-        ]) ifTrue: [ ^ false ].
+            methodClass name = #StThreadSafeTranscript ]) ifTrue: [ ^ false ].
         
-        "Skip Mutex and Monitor classes - synchronization primitives"
+        "Skip synchronization primitives"
         (methodClass notNil and: [
-            (#(Mutex Monitor RecursionLock) includes: methodClass name)
-        ]) ifTrue: [ ^ false ].
+            (#(Mutex Monitor RecursionLock) includes: methodClass name) ]) ifTrue: [ ^ false ].
         
         ^ true
     ] on: Error do: [ :ex |
-        "On any error, skip instrumentation to be safe"
-        Transcript show: '[shouldInstrumentMethod] Error checking method: ', ex messageText; cr.
-        ^ false
-    ]
+        Transcript show: '[shouldInstrumentMethod] Error: ', ex messageText; cr.
+        ^ false ]
 ]
 
 { #category : 'instrumentation' }
