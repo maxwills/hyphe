@@ -159,26 +159,36 @@ HypheReturnsCollectorStatic >> instrumentMethod: aCompiledMethod [
     
     logger log: '[INSTRUMENT] ', methodClass name, '>>', methodSelector.
     
-    "Get AST and send nodes"
-    methodAst := aCompiledMethod ast.
-    sendNodes := methodAst sendNodes.
-    
-    logger log: '[INSTRUMENT] Found ', sendNodes size asString, ' sends'.
-    
-    "Get the recording link"
-    recLink := self recordingLink.
-    
-    "Install recording link on send nodes, skipping control flow"
-    sendNodes do: [ :sendNode |
-        (self shouldSkipInstrumentingSend: sendNode selector) ifFalse: [
-            (sendNode hasMetalink: recLink)
-                ifFalse: [
-                    sendNode link: recLink.
-                    logger log: '[INSTRUMENT] Linked send: ', sendNode selector asString
-                ]
-        ] ifTrue: [
-            logger log: '[INSTRUMENT] Skipped control flow send: ', sendNode selector asString
+    "Get AST and send nodes - with error handling"
+    [
+        methodAst := aCompiledMethod ast.
+        sendNodes := methodAst sendNodes.
+        
+        logger log: '[INSTRUMENT] Found ', sendNodes size asString, ' sends'.
+        
+        "Get the recording link"
+        recLink := self recordingLink.
+        
+        "Install recording link on send nodes, skipping control flow"
+        sendNodes do: [ :sendNode |
+            (self shouldSkipInstrumentingSend: sendNode selector) ifFalse: [
+                (sendNode hasMetalink: recLink)
+                    ifFalse: [
+                        "Wrap link installation in error handler for bytecode issues"
+                        [
+                            sendNode link: recLink.
+                            logger log: '[INSTRUMENT] Linked send: ', sendNode selector asString
+                        ] on: Error do: [ :ex |
+                            logger log: '[INSTRUMENT] ERROR linking send ', sendNode selector asString, 
+                                ': ', ex messageText
+                        ]
+                    ]
+            ] ifTrue: [
+                logger log: '[INSTRUMENT] Skipped control flow send: ', sendNode selector asString
+            ]
         ]
+    ] on: Error do: [ :ex |
+        logger log: '[INSTRUMENT] ERROR processing method AST: ', ex messageText
     ]
 ]
 
@@ -202,6 +212,65 @@ HypheReturnsCollectorStatic >> instrumentTestCase [
 { #category : 'accessing' }
 HypheReturnsCollectorStatic >> logger [
     ^ logger
+]
+
+{ #category : 'data collection' }
+HypheReturnsCollectorStatic >> recordReturnValue: returnValue fromReceiver: aReceiver inMethod: aCompiledMethod [
+    "Record a return value from a method execution with the actual receiver.
+    Ultra-defensive: catch ALL errors to prevent breaking test execution."
+    
+    "GUARD: If inside instrumentation, skip recording"
+    (HypheInstrumentationGuard value = true) ifTrue: [ ^ self ].
+    
+    "GUARD: Only record in the owning process (if set)"
+    (owningProcess notNil and: [ Processor activeProcess ~~ owningProcess ]) ifTrue: [ ^ self ].
+    
+    HypheInstrumentationGuard value: true during: [
+        [
+            | methodClass methodSelector receiverClass returnClass dataItem |
+            
+            "Try to get method info"
+            [ 
+                methodClass := aCompiledMethod methodClass.
+                methodSelector := aCompiledMethod selector.
+            ] on: Error do: [ :ex |
+                methodClass := #UnknownClass.
+                methodSelector := #unknownSelector.
+            ].
+            
+            "Try to get receiver class from actual receiver"
+            [
+                receiverClass := aReceiver class.
+            ] on: Error do: [ :ex |
+                receiverClass := #UnknownReceiver.
+            ].
+            
+            "Try to get return class"
+            [
+                returnClass := returnValue class.
+            ] on: Error do: [ :ex |
+                returnClass := #ErrorGettingReturnType.
+            ].
+            
+            "Create and add data item with ALL fields"
+            dataItem := HypheReturnDataItem new
+                methodSelector: methodSelector;
+                definingClass: methodClass;
+                receiverClass: receiverClass;
+                returnClass: returnClass;
+                yourself.
+            collectionsData add: dataItem.
+            
+            logger log: '[RECORD] ', receiverClass printString, ' >> ', methodSelector printString, 
+                        ' returns ', returnClass printString.
+                        
+        ] on: Error do: [ :ex |
+            "Ultimate fallback: if ANYTHING fails, silently continue"
+            [ 
+                Transcript show: '[COLLECTOR] Silent error in recordReturnValue: ', ex messageText; cr.
+            ] on: Error do: [ "ignore even this" ]
+        ]
+    ]
 ]
 
 { #category : 'data collection' }
@@ -265,13 +334,13 @@ HypheReturnsCollectorStatic >> recordReturnValue: returnValue inMethod: aCompile
 { #category : 'instrumentation' }
 HypheReturnsCollectorStatic >> recordingLink [
     "Returns the single recording link for capturing return values.
-    Uses #after control to get return value from stack via #value reification."
+    Uses #after control to get return value and receiver from the send."
     
     ^ recordingLinkCache ifNil: [
         recordingLinkCache := MetaLink new
             metaObject: self;
-            selector: #recordReturnValue:inMethod:;
-            arguments: #(value methodToExecute);
+            selector: #recordReturnValue:fromReceiver:inMethod:;
+            arguments: #(value receiver methodToExecute);
             control: #after.
         installedLinks add: recordingLinkCache.
         recordingLinkCache
@@ -285,7 +354,7 @@ HypheReturnsCollectorStatic >> result [
 
 { #category : 'running' }
 HypheReturnsCollectorStatic >> run [
-    | startTime endTime testReturnValue |
+    | startTime endTime testReturnValue testMethod |
     result status: #running.
     startTime := DateAndTime now.
     owningProcess := Processor activeProcess.
@@ -297,8 +366,10 @@ HypheReturnsCollectorStatic >> run [
             self instrumentTestCase.
             
             testReturnValue := testCase runCaseForHyphe.
+            testMethod := testCase class lookupSelector: testCase selector.
             self recordReturnValue: testReturnValue 
-                inMethod: (testCase class lookupSelector: testCase selector).
+                fromReceiver: testCase 
+                inMethod: testMethod.
             
             result status: #completed.
         ] on: Error do: [ :ex |
@@ -329,7 +400,9 @@ HypheReturnsCollectorStatic >> runOn: aReceiver method: aCompiledMethod [
             self instrumentMethod: aCompiledMethod.
             
             returnValue := aReceiver perform: aCompiledMethod selector.
-            self recordReturnValue: returnValue inMethod: aCompiledMethod.
+            self recordReturnValue: returnValue 
+                fromReceiver: aReceiver 
+                inMethod: aCompiledMethod.
             
             result status: #completed.
         ] on: Error do: [ :ex |
