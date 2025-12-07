@@ -14,7 +14,7 @@ Class {
 
 { #category : 'as yet unclassified' }
 InferenceResultsExporter class >> export: results to: aHyDataRepresentation [
-    "Export results to HyDataRepresentation, updating existing data"
+
     ^ self new
         source: results;
         hyDataRepresentation: aHyDataRepresentation;
@@ -24,7 +24,7 @@ InferenceResultsExporter class >> export: results to: aHyDataRepresentation [
 
 { #category : 'as yet unclassified' }
 InferenceResultsExporter class >> export: results toFile: aFilePath [
-    "Export results to a new or existing HyDataRepresentation file"
+
     | hyData |
     hyData := aFilePath asFileReference exists
         ifTrue: [ HyDataRepresentation fromJsonFile: aFilePath ]
