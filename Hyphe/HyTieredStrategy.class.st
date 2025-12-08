@@ -14,37 +14,39 @@ HyTieredStrategy class >> prettyName [
 
 { #category : 'initialization' }
 HyTieredStrategy >> applyTieredAlgorithm: structural usage: usage nameHint: nameHint [
-    "Core tiered algorithm logic"
-    
-    "Tier 1: Structural analysis"
+      
+	"Tier 1: Structural analysis"
     structural ifNotEmpty: [
         ^ Dictionary new
             at: #confidence put: 1.0;
-            at: #label put: 'certain';
+            at: #types put: (structural collect: [:t | t name]) asOrderedCollection;
             at: #reasoning put: 'Provably correct from structure';
+				at: #sources put: (structural collect: [:t | t source]) asOrderedCollection ;
             yourself ].
     
     "Tier 2: Single usage observation"
     usage size = 1 ifTrue: [
         ^ Dictionary new
-            at: #confidence put: 0.95;
-            at: #label put: 'very likely';
+            at: #confidence put: 0.75;
+            at: #types put: (usage collect: [:t | t name]) asOrderedCollection;
             at: #reasoning put: 'Single type observed in usage';
+				at: #sources put: (usage collect: [:t | t source]) asOrderedCollection ;
             yourself ].
     
     "Tier 3: Multiple usage observations"
     (usage size between: 2 and: 3) ifTrue: [
         ^ Dictionary new
-            at: #confidence put: 0.85;
-            at: #label put: 'likely';
+            at: #confidence put: 0.6;
+            at: #label put: (usage collect: [:t | t name]) asOrderedCollection;
             at: #reasoning put: 'Multiple types in usage (bounded polymorphism)';
             yourself ].
     
     usage size > 3 ifTrue: [
         ^ Dictionary new
-            at: #confidence put: 0.7;
-            at: #label put: 'probable';
+            at: #confidence put: 0.4;
+            at: #label put: (usage collect: [:t | t name]) asOrderedCollection;
             at: #reasoning put: 'Highly polymorphic usage';
+				at: #sources put: (usage collect: [:t | t source]) asOrderedCollection ;
             yourself ].
     
     "Tier 4: Usage with name confirmation"
@@ -53,10 +55,16 @@ HyTieredStrategy >> applyTieredAlgorithm: structural usage: usage nameHint: name
         consensus := usage intersection: nameHint.
         
         consensus ifNotEmpty: [
+			|names namesInBoth merged|
+			names := (usage collect: [:t | t name]).
+			namesInBoth := nameHint collect: [:t | names includes: t name  ].
+			merged := ((usage collect: [:t | t source]) asOrderedCollection) addAll: (nameHint collect: [:t | t source]) asOrderedCollection.  
             ^ Dictionary new
-                at: #confidence put: 0.9;
-                at: #label put: 'very likely';
+                at: #confidence put: 0.7;
+                at: #label put: namesInBoth asOrderedCollection;
                 at: #reasoning put: 'Usage confirmed by naming';
+				   at: #sources put: merged ;
+				   at: #sources put: (nameHint collect: [:t | t source]) asOrderedCollection ;
                 yourself ].
         
         ^ Dictionary new
@@ -69,8 +77,9 @@ HyTieredStrategy >> applyTieredAlgorithm: structural usage: usage nameHint: name
     nameHint ifNotEmpty: [
         ^ Dictionary new
             at: #confidence put: 0.4;
-            at: #label put: 'possible';
+            at: #label put: (nameHint collect: [:t | t name]) asOrderedCollection;
             at: #reasoning put: 'Name heuristic only (unreliable)';
+				at: #sources put: OrderedCollection new ;
             yourself ].
     
     "Tier 6: No information"
@@ -79,6 +88,39 @@ HyTieredStrategy >> applyTieredAlgorithm: structural usage: usage nameHint: name
         at: #label put: 'unknown';
         at: #reasoning put: 'No type information available';
         yourself
+]
+
+{ #category : 'as yet unclassified' }
+HyTieredStrategy >> categoryForSource: source [
+
+	| className|
+	
+	className := tools select: [ :o | o name = source ].
+	className ifNotEmpty: [ ^ className first tier ].
+	
+	^ (InferenceSettings toolNameToClass at: source) tier.   
+    
+]
+
+{ #category : 'as yet unclassified' }
+HyTieredStrategy >> groupTypesByCategory: typesCollection [ 
+    "Group HyType objects by their source category"
+
+    | grouped |
+    grouped := Dictionary new.
+
+    typesCollection do: [ :hyType |
+        | category typeStr |
+        category := self categoryForSource: hyType source.
+        typeStr := hyType name.
+        
+        grouped 
+            at: category 
+            ifAbsentPut: [ Set new ].
+        (grouped at: category) add: hyType ].
+    
+    ^ grouped
+
 ]
 
 { #category : 'initialization' }
@@ -96,8 +138,8 @@ HyTieredStrategy >> mergeTypes: typesCollection [
     
     grouped := self groupTypesByCategory: typesCollection.
     structural := grouped at: 'structural' ifAbsent: [ Set new ].
-    usage := grouped at: 'usage' ifAbsent: [ Set new ].
-    nameHint := grouped at: 'nameHeuristic' ifAbsent: [ Set new ].
+    usage := grouped at: 'observation' ifAbsent: [ Set new ].
+    nameHint := grouped at: 'heuristic' ifAbsent: [ Set new ].
     
     ^ self applyTieredAlgorithm: structural usage: usage nameHint: nameHint
 ]
