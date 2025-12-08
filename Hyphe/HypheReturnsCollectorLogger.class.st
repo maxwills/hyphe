@@ -5,8 +5,9 @@ Class {
 		'stream',
 		'logToTranscript'
 	],
-	#category : 'Hyphe',
-	#package : 'Hyphe'
+	#category : 'Hyphe-Collectors',
+	#package : 'Hyphe',
+	#tag : 'Collectors'
 }
 
 { #category : 'instance creation' }

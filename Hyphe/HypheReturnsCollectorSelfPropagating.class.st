@@ -1,5 +1,10 @@
+"
+A prototype collector with self propagating code-recording instrumentation.
+Highly risky to use and can freeze the system.
+It is recommended to use a scoped collector like HypheReturnsCollectorMethodNode (the default one) instead.
+"
 Class {
-	#name : 'HypheReturnsCollector',
+	#name : 'HypheReturnsCollectorSelfPropagating',
 	#superclass : 'Object',
 	#instVars : [
 		'testCase',
@@ -17,27 +22,28 @@ Class {
 	#classVars : [
 		'ActiveCollector'
 	],
-	#category : 'Hyphe',
-	#package : 'Hyphe'
+	#category : 'Hyphe-Collectors',
+	#package : 'Hyphe',
+	#tag : 'Collectors'
 }
 
 { #category : 'accessing' }
-HypheReturnsCollector class >> activeCollector [
+HypheReturnsCollectorSelfPropagating class >> activeCollector [
     ^ ActiveCollector
 ]
 
 { #category : 'accessing' }
-HypheReturnsCollector class >> activeCollector: aCollector [
+HypheReturnsCollectorSelfPropagating class >> activeCollector: aCollector [
     ActiveCollector := aCollector
 ]
 
 { #category : 'instance creation' }
-HypheReturnsCollector class >> on: aTestCase [
+HypheReturnsCollectorSelfPropagating class >> on: aTestCase [
     ^ self new initializeWith: aTestCase
 ]
 
 { #category : 'cleanup' }
-HypheReturnsCollector >> cleanup [
+HypheReturnsCollectorSelfPropagating >> cleanup [
     logger log: 'Cleaning up instrumentation (', instrumentedMethods size asString, ' methods, ', installedLinks size asString, ' links)'.
     
     [ 
@@ -56,7 +62,7 @@ HypheReturnsCollector >> cleanup [
 ]
 
 { #category : 'initialization' }
-HypheReturnsCollector >> initializeForMethod: aCompiledMethod [
+HypheReturnsCollectorSelfPropagating >> initializeForMethod: aCompiledMethod [
     "Initialize the collector for any compiled method"
     logger := HypheReturnsCollectorLogger new.
     result := HypheReturnsCollectorResult new.
@@ -70,14 +76,14 @@ HypheReturnsCollector >> initializeForMethod: aCompiledMethod [
 ]
 
 { #category : 'initialization' }
-HypheReturnsCollector >> initializeWith: aTestCase [
+HypheReturnsCollectorSelfPropagating >> initializeWith: aTestCase [
     "Initialize the collector for a test case"
     testCase := aTestCase.
     self initializeForMethod: (aTestCase class lookupSelector: aTestCase selector)
 ]
 
 { #category : 'instrumentation' }
-HypheReturnsCollector >> instrumentMethod: aCompiledMethod [
+HypheReturnsCollectorSelfPropagating >> instrumentMethod: aCompiledMethod [
     "Instrument a method:
     1. Send nodes → propagation link (#before)
     2. Send nodes → recording link (#after) to capture return value
@@ -141,7 +147,7 @@ HypheReturnsCollector >> instrumentMethod: aCompiledMethod [
 ]
 
 { #category : 'instrumentation' }
-HypheReturnsCollector >> instrumentTestCase [
+HypheReturnsCollectorSelfPropagating >> instrumentTestCase [
     "Instrument the test method using lookupSelector:"
     | testMethod testSelector testClass |
     
@@ -159,12 +165,12 @@ HypheReturnsCollector >> instrumentTestCase [
 ]
 
 { #category : 'accessing' }
-HypheReturnsCollector >> logger [
+HypheReturnsCollectorSelfPropagating >> logger [
     ^ logger
 ]
 
 { #category : 'instrumentation' }
-HypheReturnsCollector >> propagateInstrumentationTo: aCompiledMethod [
+HypheReturnsCollectorSelfPropagating >> propagateInstrumentationTo: aCompiledMethod [
     "Called by MetaLink before a message send executes.
     Guard prevents recursive instrumentation."
     
@@ -191,7 +197,7 @@ HypheReturnsCollector >> propagateInstrumentationTo: aCompiledMethod [
 ]
 
 { #category : 'instrumentation' }
-HypheReturnsCollector >> propagationLink [
+HypheReturnsCollectorSelfPropagating >> propagationLink [
     "Returns the single propagation link used for all send nodes."
     
     ^ propagationLinkCache ifNil: [
@@ -206,7 +212,7 @@ HypheReturnsCollector >> propagationLink [
 ]
 
 { #category : 'data collection' }
-HypheReturnsCollector >> recordReturnValue: returnValue inMethod: aCompiledMethod [
+HypheReturnsCollectorSelfPropagating >> recordReturnValue: returnValue inMethod: aCompiledMethod [
     "Record a return value from a method execution.
     Ultra-defensive: catch ALL errors to prevent breaking test execution.
     Guard prevents recursive instrumentation during recording."
@@ -270,7 +276,7 @@ HypheReturnsCollector >> recordReturnValue: returnValue inMethod: aCompiledMetho
 ]
 
 { #category : 'instrumentation' }
-HypheReturnsCollector >> recordingLink [
+HypheReturnsCollectorSelfPropagating >> recordingLink [
     "Returns the single recording link for capturing return values.
     Uses #after control to get return value from stack via #value reification.
     Uses methodToExecute to get the CALLED method, not the caller."
@@ -288,12 +294,12 @@ HypheReturnsCollector >> recordingLink [
 ]
 
 { #category : 'accessing' }
-HypheReturnsCollector >> result [
+HypheReturnsCollectorSelfPropagating >> result [
     ^ result
 ]
 
 { #category : 'running' }
-HypheReturnsCollector >> run [
+HypheReturnsCollectorSelfPropagating >> run [
 
 	| startTime endTime testReturnValue |
 	logger log: 'Starting test execution with instrumentation'.
@@ -339,7 +345,7 @@ HypheReturnsCollector >> run [
 ]
 
 { #category : 'running' }
-HypheReturnsCollector >> runOn: aReceiver method: aCompiledMethod [
+HypheReturnsCollectorSelfPropagating >> runOn: aReceiver method: aCompiledMethod [
     "Run instrumentation on any method with a receiver in a new process"
     | startTime endTime returnValue semaphore |
     logger log: 'Starting execution with instrumentation'.
@@ -386,7 +392,7 @@ HypheReturnsCollector >> runOn: aReceiver method: aCompiledMethod [
 ]
 
 { #category : 'instrumentation' }
-HypheReturnsCollector >> shouldInstrumentMethod: aCompiledMethod [
+HypheReturnsCollectorSelfPropagating >> shouldInstrumentMethod: aCompiledMethod [
     "Return true if this method should be instrumented."
     [
         | methodClass |
@@ -435,7 +441,7 @@ HypheReturnsCollector >> shouldInstrumentMethod: aCompiledMethod [
         
         "Skip our instrumentation classes INCLUDING HypheInternalCollection"
         (methodClass notNil and: [
-            (#(HypheReturnsCollector HypheReturnsCollectorLogger 
+            (#(#HypheReturnsCollectorSelfPropagating HypheReturnsCollectorLogger 
                HypheReturnsCollectorResult HypheReturnDataItem
                HypheInternalCollection) 
                 includes: methodClass name) ]) ifTrue: [ ^ false ].
@@ -455,7 +461,7 @@ HypheReturnsCollector >> shouldInstrumentMethod: aCompiledMethod [
 ]
 
 { #category : 'instrumentation' }
-HypheReturnsCollector >> shouldSkipInstrumentingSend: aSelector [
+HypheReturnsCollectorSelfPropagating >> shouldSkipInstrumentingSend: aSelector [
     "Return true if this send should not be instrumented to avoid bytecode errors.
     Uses direct comparison to avoid instrumentation loops with includes:."
     

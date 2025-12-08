@@ -81,6 +81,19 @@ HypheReturnsCollectorMethodNodesTest >> testDataCollectionCapturesReturnValue [
     self assert: dataItem returnClass = ByteString
 ]
 
+{ #category : 'tests' }
+HypheReturnsCollectorMethodNodesTest >> testErrorHandling [
+    | testCase collector result |
+    testCase := HypheReturnsCollectorTestFixture new.
+    
+    collector := HypheReturnsCollectorMethodNodes new.
+    result := collector runTest: testCase selector: #testThatFails instrumentForRecording: true.
+   
+    
+    self assert: result notNil.
+    self assert: result hasErrors
+]
+
 { #category : 'tests - result' }
 HypheReturnsCollectorMethodNodesTest >> testExecutionTimeTracking [
     | collector result testCase testMethod |
@@ -312,7 +325,7 @@ HypheReturnsCollectorMethodNodesTest >> testSimilarToStaticCollector [
     "Setup static collector for comparison"
     testCase2 := HypheReturnsCollectorTestFixture new.
     testCase2 setTestSelector: #testSimpleReturn.
-    staticCollector := HypheReturnsCollectorStatic on: testCase2 forPackages: #('Hyphe-Tests').
+    staticCollector := HypheReturnsCollectorMessageSends on: testCase2 forPackages: #('Hyphe-Tests').
     result2 := staticCollector run.
     
     "Both should complete successfully"

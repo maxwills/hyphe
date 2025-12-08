@@ -10,8 +10,9 @@ Class {
 		'instrumentedMethods',
 		'owningProcess'
 	],
-	#category : 'Hyphe',
-	#package : 'Hyphe'
+	#category : 'Hyphe-Collectors',
+	#package : 'Hyphe',
+	#tag : 'Collectors'
 }
 
 { #category : 'api-instrumentation' }

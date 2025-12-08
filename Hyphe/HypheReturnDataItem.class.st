@@ -7,8 +7,9 @@ Class {
 		'definingClass',
 		'returnClass'
 	],
-	#category : 'Hyphe',
-	#package : 'Hyphe'
+	#category : 'Hyphe-Collectors',
+	#package : 'Hyphe',
+	#tag : 'Collectors'
 }
 
 { #category : 'accessing' }

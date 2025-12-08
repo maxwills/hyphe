@@ -1,17 +1,17 @@
 Class {
-	#name : 'HypheReturnsCollectorStaticTest',
+	#name : 'HypheReturnsCollectorMessageSendsTest',
 	#superclass : 'TestCase',
 	#category : 'Hyphe-Tests',
 	#package : 'Hyphe-Tests'
 }
 
 { #category : 'tests - basic' }
-HypheReturnsCollectorStaticTest >> testBasicStaticInstrumentation [
+HypheReturnsCollectorMessageSendsTest >> testBasicStaticInstrumentation [
     | testCase collector result |
     testCase := HypheReturnsCollectorTestFixture new.
     testCase setTestSelector: #testSimpleReturn.
     
-    collector := HypheReturnsCollectorStatic 
+    collector := HypheReturnsCollectorMessageSends 
         on: testCase 
         forPackages: #('Hyphe-Tests').
     
@@ -22,12 +22,12 @@ HypheReturnsCollectorStaticTest >> testBasicStaticInstrumentation [
 ]
 
 { #category : 'tests - cleanup' }
-HypheReturnsCollectorStaticTest >> testCleanup [
+HypheReturnsCollectorMessageSendsTest >> testCleanup [
     | testCase collector result |
     testCase := HypheReturnsCollectorTestFixture new.
     testCase setTestSelector: #testSimpleReturn.
     
-    collector := HypheReturnsCollectorStatic 
+    collector := HypheReturnsCollectorMessageSends 
         on: testCase 
         forPackages: #('Hyphe-Tests').
     
@@ -37,12 +37,12 @@ HypheReturnsCollectorStaticTest >> testCleanup [
 ]
 
 { #category : 'tests - data collection' }
-HypheReturnsCollectorStaticTest >> testDataCollection [
+HypheReturnsCollectorMessageSendsTest >> testDataCollection [
     | testCase collector result |
     testCase := HypheReturnsCollectorTestFixture new.
     testCase setTestSelector: #testArithmetic.
     
-    collector := HypheReturnsCollectorStatic 
+    collector := HypheReturnsCollectorMessageSends 
         on: testCase 
         forPackages: #('Hyphe-Tests').
     
@@ -55,12 +55,12 @@ HypheReturnsCollectorStaticTest >> testDataCollection [
 ]
 
 { #category : 'tests - domain methods' }
-HypheReturnsCollectorStaticTest >> testDomainMethodsCollection [
+HypheReturnsCollectorMessageSendsTest >> testDomainMethodsCollection [
     | testCase collector |
     testCase := HypheReturnsCollectorTestFixture new.
     testCase setTestSelector: #testSimpleReturn.
     
-    collector := HypheReturnsCollectorStatic 
+    collector := HypheReturnsCollectorMessageSends 
         on: testCase 
         forPackages: #('Hyphe-Tests').
     
@@ -70,12 +70,12 @@ HypheReturnsCollectorStaticTest >> testDomainMethodsCollection [
 ]
 
 { #category : 'tests - error handling' }
-HypheReturnsCollectorStaticTest >> testErrorHandling [
+HypheReturnsCollectorMessageSendsTest >> testErrorHandling [
     | testCase collector result |
     testCase := HypheReturnsCollectorTestFixture new.
     testCase setTestSelector: #testThatFails.
     
-    collector := HypheReturnsCollectorStatic 
+    collector := HypheReturnsCollectorMessageSends 
         on: testCase 
         forPackages: #('Hyphe-Tests').
     
@@ -86,12 +86,12 @@ HypheReturnsCollectorStaticTest >> testErrorHandling [
 ]
 
 { #category : 'tests - instrumentation' }
-HypheReturnsCollectorStaticTest >> testInstrumentationCount [
+HypheReturnsCollectorMessageSendsTest >> testInstrumentationCount [
     | testCase collector result |
     testCase := HypheReturnsCollectorTestFixture new.
     testCase setTestSelector: #testSimpleReturn.
     
-    collector := HypheReturnsCollectorStatic 
+    collector := HypheReturnsCollectorMessageSends 
         on: testCase 
         forPackages: #('Hyphe-Tests').
     
@@ -101,12 +101,12 @@ HypheReturnsCollectorStaticTest >> testInstrumentationCount [
 ]
 
 { #category : 'tests - packages' }
-HypheReturnsCollectorStaticTest >> testMultiplePackages [
+HypheReturnsCollectorMessageSendsTest >> testMultiplePackages [
     | testCase collector result |
     testCase := HypheReturnsCollectorTestFixture new.
     testCase setTestSelector: #testChainedCalls.
     
-    collector := HypheReturnsCollectorStatic 
+    collector := HypheReturnsCollectorMessageSends 
         on: testCase 
         forPackages: #('Hyphe-Tests' 'Hyphe').
     
@@ -117,12 +117,12 @@ HypheReturnsCollectorStaticTest >> testMultiplePackages [
 ]
 
 { #category : 'tests - edge cases' }
-HypheReturnsCollectorStaticTest >> testWithEmptyPackageList [
+HypheReturnsCollectorMessageSendsTest >> testWithEmptyPackageList [
     | testCase collector result |
     testCase := HypheReturnsCollectorTestFixture new.
     testCase setTestSelector: #testSimpleReturn.
     
-    collector := HypheReturnsCollectorStatic 
+    collector := HypheReturnsCollectorMessageSends 
         on: testCase 
         forPackages: #().
     
@@ -132,12 +132,12 @@ HypheReturnsCollectorStaticTest >> testWithEmptyPackageList [
 ]
 
 { #category : 'tests - edge cases' }
-HypheReturnsCollectorStaticTest >> testWithNonExistentPackage [
+HypheReturnsCollectorMessageSendsTest >> testWithNonExistentPackage [
     | testCase collector result |
     testCase := HypheReturnsCollectorTestFixture new.
     testCase setTestSelector: #testSimpleReturn.
     
-    collector := HypheReturnsCollectorStatic 
+    collector := HypheReturnsCollectorMessageSends 
         on: testCase 
         forPackages: #('NonExistentPackage123').
     

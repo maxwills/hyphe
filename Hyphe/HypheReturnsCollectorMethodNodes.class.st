@@ -1,6 +1,18 @@
 "
 ```smalltalk
 ""===============================================""
+""USAGE EXAMPLES: processPackages: method""
+""===============================================""
+""Note: Packages names should be string""
+""Example 0: Automatically process packages""
+| collector result |
+collector := HypheReturnsCollectorMethodNodes new.
+result := collector processPackages: #(''AI-Algorithms-Graph 'AI-Algorithms-Graph-Components' 'AI-Algorithms-Graph-Tests').
+
+""Inspect results""
+result inspect.
+
+""===============================================""
 ""USAGE EXAMPLES FOR HYPHE RETURNS COLLECTORS""
 ""===============================================""
 
@@ -184,8 +196,9 @@ Class {
 	#instVars : [
 		'recordingLinkCache'
 	],
-	#category : 'Hyphe',
-	#package : 'Hyphe'
+	#category : 'Hyphe-Collectors',
+	#package : 'Hyphe',
+	#tag : 'Collectors'
 }
 
 { #category : 'initialization' }
@@ -255,6 +268,108 @@ HypheReturnsCollectorMethodNodes >> instrumentMethod: aCompiledMethod [
         logger log: '[INSTRUMENT] ERROR processing method AST: ', ex messageText.
         instrumentedMethods remove: aCompiledMethod ifAbsent: []
     ]
+]
+
+{ #category : 'api-running' }
+HypheReturnsCollectorMethodNodes >> processPackages: aCollectionOfPackageNames [
+    "Process packages: instrument non-test methods, run all tests, return results.
+    This is the main entry point for full package analysis."
+    | testCaseClasses nonTestCaseMethods testPairs startTime endTime |
+    
+    logger log: '[PROCESS] Starting processPackages with ', aCollectionOfPackageNames size asString, ' packages'.
+    
+    "Reset state"
+    self reset.
+    
+    result status: #running.
+    startTime := DateAndTime now.
+    owningProcess := Processor activeProcess.
+    
+    [
+        [
+            "Step 1: Collect test case classes and non-test case methods"
+            testCaseClasses := OrderedCollection new.
+            nonTestCaseMethods := OrderedCollection new.
+            
+            aCollectionOfPackageNames do: [ :packageName |
+                | package |
+                package := PackageOrganizer default packageNamed: packageName ifAbsent: [ nil ].
+                package ifNotNil: [
+                    logger log: '[PROCESS] Processing package: ', packageName.
+                    package definedClasses do: [ :class |
+                        (class isTestCase)
+                            ifTrue: [ 
+                                "Collect test case class"
+                                testCaseClasses add: class.
+                                logger log: '[PROCESS] Found test case class: ', class name
+                            ]
+                            ifFalse: [
+                                "Collect non-test case methods (both instance and class side)"
+                                class methods do: [ :method | nonTestCaseMethods add: method ].
+                                class classSide methods do: [ :method | nonTestCaseMethods add: method ].
+                            ]
+                    ]
+                ] ifNil: [
+                    logger log: '[PROCESS] WARNING: Package not found: ', packageName
+                ]
+            ].
+            
+            logger log: '[PROCESS] Found ', testCaseClasses size asString, ' test case classes'.
+            logger log: '[PROCESS] Found ', nonTestCaseMethods size asString, ' non-test case methods'.
+            
+            "Step 2: Configure methods to instrument (non-test case methods only)"
+            self setMethodsToRecord: nonTestCaseMethods.
+            
+            "Step 3: Instrument all non-test case methods"
+            self instrumentForRecording.
+            logger log: '[PROCESS] Instrumented ', instrumentedMethods size asString, ' methods'.
+            
+            "Step 4: Build list of test pairs (testCase -> selector)"
+            testPairs := OrderedCollection new.
+            testCaseClasses do: [ :testClass |
+                testClass allTestSelectors do: [ :selector |
+                    testPairs add: (testClass new -> selector)
+                ]
+            ].
+            logger log: '[PROCESS] Found ', testPairs size asString, ' test cases to run'.
+            
+            "Step 5: Run all tests (this produces results automatically via instrumentation)"
+            testPairs do: [ :pair |
+                | testCase selector |
+                testCase := pair key.
+                selector := pair value.
+                
+                "Set the test selector"
+                testCase setTestSelector: selector.
+                
+                logger log: '[PROCESS] Running test: ', testCase class name, '>>', selector.
+                
+                "Use runCaseForHyphe for proper setup/tearDown"
+                [ testCase runCaseForHyphe ] 
+                    on: Error ",TestFailure , TestSkipped, AssertionFailure"
+                    do: [ :ex |
+                        logger log: '[PROCESS] Test failed/error: ', testCase class name, '>>', selector, ' - ', ex messageText
+                    ]
+            ].
+            
+            result status: #completed.
+            logger log: '[PROCESS] All tests completed'
+        ] on: Error do: [ :ex |
+            result status: #error.
+            result errorMessage: ex messageText.
+            logger log: '[PROCESS] Error during processing: ', ex messageText
+        ]
+    ] ensure: [
+        "Step 6: Cleanup (guaranteed via ensure:)"
+        self cleanup.
+        endTime := DateAndTime now.
+        result executionTime: (endTime - startTime).
+        result collections: collectionsData asArray.
+        logger log: '[PROCESS] Cleanup completed'
+    ].
+    
+    logger log: '[PROCESS] Collected ', collectionsData size asString, ' data points'.
+    ^ result
 ]
 
 { #category : 'data collection' }

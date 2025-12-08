@@ -1,16 +1,16 @@
 Class {
-	#name : 'HypheReturnsCollectorTest',
+	#name : 'HypheReturnsCollectorSelfPropagatingTest',
 	#superclass : 'TestCase',
 	#category : 'Hyphe-Tests',
 	#package : 'Hyphe-Tests'
 }
 
 { #category : 'tests - control flow' }
-HypheReturnsCollectorTest >> testAndOrInstrumentation [
+HypheReturnsCollectorSelfPropagatingTest >> testAndOrInstrumentation [
     | testCase collector result collections |
     testCase := HypheReturnsCollectorTestFixture new.
     testCase setTestSelector: #testAndOr.
-    collector := HypheReturnsCollector on: testCase.
+    collector := HypheReturnsCollectorSelfPropagating on: testCase.
     result := collector run.
     
     self assert: result isCompleted.
@@ -19,11 +19,11 @@ HypheReturnsCollectorTest >> testAndOrInstrumentation [
 ]
 
 { #category : 'tests - data collection' }
-HypheReturnsCollectorTest >> testArithmeticCollection [
+HypheReturnsCollectorSelfPropagatingTest >> testArithmeticCollection [
     | testCase collector result |
     testCase := HypheReturnsCollectorTestFixture new.
     testCase setTestSelector: #testArithmetic.
-    collector := HypheReturnsCollector on: testCase.
+    collector := HypheReturnsCollectorSelfPropagating on: testCase.
     result := collector run.
     
     self assert: result isCompleted.
@@ -31,11 +31,11 @@ HypheReturnsCollectorTest >> testArithmeticCollection [
 ]
 
 { #category : 'tests - blocks' }
-HypheReturnsCollectorTest >> testBlockValueInstrumentation [
+HypheReturnsCollectorSelfPropagatingTest >> testBlockValueInstrumentation [
     | testCase collector result collections |
     testCase := HypheReturnsCollectorTestFixture new.
     testCase setTestSelector: #testBlockValue.
-    collector := HypheReturnsCollector on: testCase.
+    collector := HypheReturnsCollectorSelfPropagating on: testCase.
     result := collector run.
     
     self assert: result isCompleted.
@@ -44,11 +44,11 @@ HypheReturnsCollectorTest >> testBlockValueInstrumentation [
 ]
 
 { #category : 'tests - blocks' }
-HypheReturnsCollectorTest >> testBlockWithArgumentInstrumentation [
+HypheReturnsCollectorSelfPropagatingTest >> testBlockWithArgumentInstrumentation [
     | testCase collector result collections |
     testCase := HypheReturnsCollectorTestFixture new.
     testCase setTestSelector: #testBlockWithArgument.
-    collector := HypheReturnsCollector on: testCase.
+    collector := HypheReturnsCollectorSelfPropagating on: testCase.
     result := collector run.
     
     self assert: result isCompleted.
@@ -57,11 +57,11 @@ HypheReturnsCollectorTest >> testBlockWithArgumentInstrumentation [
 ]
 
 { #category : 'tests - instrumentation' }
-HypheReturnsCollectorTest >> testChainedCallsPropagation [
+HypheReturnsCollectorSelfPropagatingTest >> testChainedCallsPropagation [
     | testCase collector result collections |
     testCase := HypheReturnsCollectorTestFixture new.
     testCase setTestSelector: #testChainedCalls.
-    collector := HypheReturnsCollector on: testCase.
+    collector := HypheReturnsCollectorSelfPropagating on: testCase.
     result := collector run.
     
     self assert: result isCompleted.
@@ -74,12 +74,12 @@ HypheReturnsCollectorTest >> testChainedCallsPropagation [
 ]
 
 { #category : 'tests - error handling' }
-HypheReturnsCollectorTest >> testCleanupOnError [
+HypheReturnsCollectorSelfPropagatingTest >> testCleanupOnError [
     | testCase collector result |
 true ifTrue: [ ^self ]."skip this. It freezes the system"
     testCase := HypheReturnsCollectorTestFixture new.
     testCase setTestSelector: #testThatFails.
-    collector := HypheReturnsCollector on: testCase.
+    collector := HypheReturnsCollectorSelfPropagating on: testCase.
     
     "Disable transcript logging to avoid clutter"
     
@@ -91,11 +91,11 @@ true ifTrue: [ ^self ]."skip this. It freezes the system"
 ]
 
 { #category : 'tests - basic' }
-HypheReturnsCollectorTest >> testCollectorCreation [
+HypheReturnsCollectorSelfPropagatingTest >> testCollectorCreation [
     | testCase collector |
     testCase := HypheReturnsCollectorTestFixture new.
     testCase setTestSelector: #testSimpleReturn.
-    collector := HypheReturnsCollector on: testCase.
+    collector := HypheReturnsCollectorSelfPropagating on: testCase.
     
     self assert: collector notNil.
     self assert: collector result notNil.
@@ -103,11 +103,11 @@ HypheReturnsCollectorTest >> testCollectorCreation [
 ]
 
 { #category : 'tests - control flow' }
-HypheReturnsCollectorTest >> testEnsureInstrumentation [
+HypheReturnsCollectorSelfPropagatingTest >> testEnsureInstrumentation [
     | testCase collector result collections |
     testCase := HypheReturnsCollectorTestFixture new.
     testCase setTestSelector: #testEnsure.
-    collector := HypheReturnsCollector on: testCase.
+    collector := HypheReturnsCollectorSelfPropagating on: testCase.
     result := collector run.
     
     self assert: result isCompleted.
@@ -116,11 +116,11 @@ HypheReturnsCollectorTest >> testEnsureInstrumentation [
 ]
 
 { #category : 'tests - result' }
-HypheReturnsCollectorTest >> testExecutionTimeTracking [
+HypheReturnsCollectorSelfPropagatingTest >> testExecutionTimeTracking [
     | testCase collector result |
     testCase := HypheReturnsCollectorTestFixture new.
     testCase setTestSelector: #testSimpleReturn.
-    collector := HypheReturnsCollector on: testCase.
+    collector := HypheReturnsCollectorSelfPropagating on: testCase.
     result := collector run.
     
     self assert: result executionTime notNil.
@@ -128,12 +128,12 @@ HypheReturnsCollectorTest >> testExecutionTimeTracking [
 ]
 
 { #category : 'tests - error handling' }
-HypheReturnsCollectorTest >> testHandleFailingTest [
+HypheReturnsCollectorSelfPropagatingTest >> testHandleFailingTest [
     | testCase collector result |
 true ifTrue: [ ^self ]."skip this. It freezes the system"
     testCase := HypheReturnsCollectorTestFixture new.
     testCase setTestSelector: #testThatFails.
-    collector := HypheReturnsCollector on: testCase.
+    collector := HypheReturnsCollectorSelfPropagating on: testCase.
     result := collector run.
     
     "Should not be completed due to failure"
@@ -143,11 +143,11 @@ true ifTrue: [ ^self ]."skip this. It freezes the system"
 ]
 
 { #category : 'tests - control flow' }
-HypheReturnsCollectorTest >> testIfNilIfNotNilInstrumentation [
+HypheReturnsCollectorSelfPropagatingTest >> testIfNilIfNotNilInstrumentation [
     | testCase collector result collections |
     testCase := HypheReturnsCollectorTestFixture new.
     testCase setTestSelector: #testIfNilIfNotNil.
-    collector := HypheReturnsCollector on: testCase.
+    collector := HypheReturnsCollectorSelfPropagating on: testCase.
     result := collector run.
     
     self assert: result isCompleted.
@@ -156,11 +156,11 @@ HypheReturnsCollectorTest >> testIfNilIfNotNilInstrumentation [
 ]
 
 { #category : 'tests - control flow' }
-HypheReturnsCollectorTest >> testIfNilIfNotNilWithValueInstrumentation [
+HypheReturnsCollectorSelfPropagatingTest >> testIfNilIfNotNilWithValueInstrumentation [
     | testCase collector result collections |
     testCase := HypheReturnsCollectorTestFixture new.
     testCase setTestSelector: #testIfNilIfNotNilWithValue.
-    collector := HypheReturnsCollector on: testCase.
+    collector := HypheReturnsCollectorSelfPropagating on: testCase.
     result := collector run.
     
     self assert: result isCompleted.
@@ -169,22 +169,22 @@ HypheReturnsCollectorTest >> testIfNilIfNotNilWithValueInstrumentation [
 ]
 
 { #category : 'tests - logger' }
-HypheReturnsCollectorTest >> testLoggerAccess [
+HypheReturnsCollectorSelfPropagatingTest >> testLoggerAccess [
     | testCase collector |
     testCase := HypheReturnsCollectorTestFixture new.
     testCase setTestSelector: #testSimpleReturn.
-    collector := HypheReturnsCollector on: testCase.
+    collector := HypheReturnsCollectorSelfPropagating on: testCase.
     
     self assert: collector logger notNil.
     self assert: collector logger class = HypheReturnsCollectorLogger
 ]
 
 { #category : 'tests - logger' }
-HypheReturnsCollectorTest >> testLoggerTranscriptCanBeDisabled [
+HypheReturnsCollectorSelfPropagatingTest >> testLoggerTranscriptCanBeDisabled [
     | testCase collector |
     testCase := HypheReturnsCollectorTestFixture new.
     testCase setTestSelector: #testSimpleReturn.
-    collector := HypheReturnsCollector on: testCase.
+    collector := HypheReturnsCollectorSelfPropagating on: testCase.
     
     collector logger disableTranscriptLogging.
     self deny: collector logger logToTranscript.
@@ -195,11 +195,11 @@ HypheReturnsCollectorTest >> testLoggerTranscriptCanBeDisabled [
 ]
 
 { #category : 'tests - data collection' }
-HypheReturnsCollectorTest >> testMethodClassCollection [
+HypheReturnsCollectorSelfPropagatingTest >> testMethodClassCollection [
     | testCase collector result collections dataItem |
     testCase := HypheReturnsCollectorTestFixture new.
     testCase setTestSelector: #testSimpleReturn.
-    collector := HypheReturnsCollector on: testCase.
+    collector := HypheReturnsCollectorSelfPropagating on: testCase.
     result := collector run.
     
     collections := result collections.
@@ -209,11 +209,11 @@ HypheReturnsCollectorTest >> testMethodClassCollection [
 ]
 
 { #category : 'tests - data collection' }
-HypheReturnsCollectorTest >> testMixedReturnTypes [
+HypheReturnsCollectorSelfPropagatingTest >> testMixedReturnTypes [
     | testCase collector result collections stringData numberData |
     testCase := HypheReturnsCollectorTestFixture new.
     testCase setTestSelector: #testMixedReturnTypes.
-    collector := HypheReturnsCollector on: testCase.
+    collector := HypheReturnsCollectorSelfPropagating on: testCase.
     result := collector run.
     
     collections := result collections.
@@ -227,11 +227,11 @@ HypheReturnsCollectorTest >> testMixedReturnTypes [
 ]
 
 { #category : 'tests - blocks' }
-HypheReturnsCollectorTest >> testNestedBlocksInstrumentation [
+HypheReturnsCollectorSelfPropagatingTest >> testNestedBlocksInstrumentation [
     | testCase collector result collections |
     testCase := HypheReturnsCollectorTestFixture new.
     testCase setTestSelector: #testNestedBlocks.
-    collector := HypheReturnsCollector on: testCase.
+    collector := HypheReturnsCollectorSelfPropagating on: testCase.
     result := collector run.
     
     self assert: result isCompleted.
@@ -240,11 +240,11 @@ HypheReturnsCollectorTest >> testNestedBlocksInstrumentation [
 ]
 
 { #category : 'tests - edge cases' }
-HypheReturnsCollectorTest >> testNoDuplicateInstrumentation [
+HypheReturnsCollectorSelfPropagatingTest >> testNoDuplicateInstrumentation [
     | testCase collector result collections firstSize secondSize |
     testCase := HypheReturnsCollectorTestFixture new.
     testCase setTestSelector: #testSimpleReturn.
-    collector := HypheReturnsCollector on: testCase.
+    collector := HypheReturnsCollectorSelfPropagating on: testCase.
     result := collector run.
     
     firstSize := result collections size.
@@ -252,7 +252,7 @@ HypheReturnsCollectorTest >> testNoDuplicateInstrumentation [
     "Run again with same test"
     testCase := HypheReturnsCollectorTestFixture new.
     testCase setTestSelector: #testSimpleReturn.
-    collector := HypheReturnsCollector on: testCase.
+    collector := HypheReturnsCollectorSelfPropagating on: testCase.
     result := collector run.
     
     secondSize := result collections size.
@@ -262,11 +262,11 @@ HypheReturnsCollectorTest >> testNoDuplicateInstrumentation [
 ]
 
 { #category : 'tests - control flow' }
-HypheReturnsCollectorTest >> testOnDoInstrumentation [
+HypheReturnsCollectorSelfPropagatingTest >> testOnDoInstrumentation [
     | testCase collector result collections |
     testCase := HypheReturnsCollectorTestFixture new.
     testCase setTestSelector: #testOnDo.
-    collector := HypheReturnsCollector on: testCase.
+    collector := HypheReturnsCollectorSelfPropagating on: testCase.
     result := collector run.
     
     self assert: result isCompleted.
@@ -275,11 +275,11 @@ HypheReturnsCollectorTest >> testOnDoInstrumentation [
 ]
 
 { #category : 'tests - edge cases' }
-HypheReturnsCollectorTest >> testPrimitiveMethodHandling [
+HypheReturnsCollectorSelfPropagatingTest >> testPrimitiveMethodHandling [
     | testCase collector result |
     testCase := HypheReturnsCollectorTestFixture new.
     testCase setTestSelector: #testPrimitives.
-    collector := HypheReturnsCollector on: testCase.
+    collector := HypheReturnsCollectorSelfPropagating on: testCase.
     
     "Should not crash on primitive methods"
     result := collector run.
@@ -287,11 +287,11 @@ HypheReturnsCollectorTest >> testPrimitiveMethodHandling [
 ]
 
 { #category : 'tests - data collection' }
-HypheReturnsCollectorTest >> testReceiverClassCollection [
+HypheReturnsCollectorSelfPropagatingTest >> testReceiverClassCollection [
     | testCase collector result collections dataItem |
     testCase := HypheReturnsCollectorTestFixture new.
     testCase setTestSelector: #testWithMessageSends.
-    collector := HypheReturnsCollector on: testCase.
+    collector := HypheReturnsCollectorSelfPropagating on: testCase.
     result := collector run.
     
     collections := result collections.
@@ -302,11 +302,11 @@ HypheReturnsCollectorTest >> testReceiverClassCollection [
 ]
 
 { #category : 'tests - data collection' }
-HypheReturnsCollectorTest >> testReturnTypeCollection [
+HypheReturnsCollectorSelfPropagatingTest >> testReturnTypeCollection [
     | testCase collector result collections dataItem |
     testCase := HypheReturnsCollectorTestFixture new.
     testCase setTestSelector: #testSimpleReturn.
-    collector := HypheReturnsCollector on: testCase.
+    collector := HypheReturnsCollectorSelfPropagating on: testCase.
     result := collector run.
     
     collections := result collections.
@@ -317,11 +317,11 @@ HypheReturnsCollectorTest >> testReturnTypeCollection [
 ]
 
 { #category : 'tests - basic' }
-HypheReturnsCollectorTest >> testSimpleReturnCollection [
+HypheReturnsCollectorSelfPropagatingTest >> testSimpleReturnCollection [
     | testCase collector result |
     testCase := HypheReturnsCollectorTestFixture new.
     testCase setTestSelector: #testSimpleReturn.
-    collector := HypheReturnsCollector on: testCase.
+    collector := HypheReturnsCollectorSelfPropagating on: testCase.
     result := collector run.
     
     self assert: result notNil.
@@ -330,22 +330,22 @@ HypheReturnsCollectorTest >> testSimpleReturnCollection [
 ]
 
 { #category : 'tests - result' }
-HypheReturnsCollectorTest >> testStatusTracking [
+HypheReturnsCollectorSelfPropagatingTest >> testStatusTracking [
     | testCase collector result |
     testCase := HypheReturnsCollectorTestFixture new.
     testCase setTestSelector: #testSimpleReturn.
-    collector := HypheReturnsCollector on: testCase.
+    collector := HypheReturnsCollectorSelfPropagating on: testCase.
     result := collector run.
     
     self assert: result status = #completed
 ]
 
 { #category : 'tests - control flow' }
-HypheReturnsCollectorTest >> testToDoInstrumentation [
+HypheReturnsCollectorSelfPropagatingTest >> testToDoInstrumentation [
     | testCase collector result collections |
     testCase := HypheReturnsCollectorTestFixture new.
     testCase setTestSelector: #testToDo.
-    collector := HypheReturnsCollector on: testCase.
+    collector := HypheReturnsCollectorSelfPropagating on: testCase.
     result := collector run.
     
     self assert: result isCompleted.
@@ -354,11 +354,11 @@ HypheReturnsCollectorTest >> testToDoInstrumentation [
 ]
 
 { #category : 'tests - control flow' }
-HypheReturnsCollectorTest >> testWhileTrueInstrumentation [
+HypheReturnsCollectorSelfPropagatingTest >> testWhileTrueInstrumentation [
     | testCase collector result collections |
     testCase := HypheReturnsCollectorTestFixture new.
     testCase setTestSelector: #testWhileTrue.
-    collector := HypheReturnsCollector on: testCase.
+    collector := HypheReturnsCollectorSelfPropagating on: testCase.
     result := collector run.
     
     self assert: result isCompleted.
@@ -367,11 +367,11 @@ HypheReturnsCollectorTest >> testWhileTrueInstrumentation [
 ]
 
 { #category : 'tests - instrumentation' }
-HypheReturnsCollectorTest >> testWithMessageSends [
+HypheReturnsCollectorSelfPropagatingTest >> testWithMessageSends [
     | testCase collector result collections |
     testCase := HypheReturnsCollectorTestFixture new.
     testCase setTestSelector: #testWithMessageSends.
-    collector := HypheReturnsCollector on: testCase.
+    collector := HypheReturnsCollectorSelfPropagating on: testCase.
     result := collector run.
     
     self assert: result isCompleted.
@@ -383,12 +383,12 @@ HypheReturnsCollectorTest >> testWithMessageSends [
 ]
 
 { #category : 'tests - instrumentation' }
-HypheReturnsCollectorTest >> testWithOrderedCollection [
+HypheReturnsCollectorSelfPropagatingTest >> testWithOrderedCollection [
     | testCase collector result collections |
 true ifTrue: [ ^self ]."skip this. It freezes the system"
     testCase := HypheReturnsCollectorTestFixture new.
     testCase setTestSelector: #testWithOrderedCollection.
-    collector := HypheReturnsCollector on: testCase.
+    collector := HypheReturnsCollectorSelfPropagating on: testCase.
     result := collector run.
     
     self assert: result isCompleted.

@@ -1,5 +1,11 @@
+"
+A scoped collector that instruments message sends nodes in a given set of packages.
+The instrumentation is only appplied when running the collector and then it is removed.
+The approach on instrumenting message nodes is prone to failure due to many edge cases.
+It is recommended to use the HypheReturnsCollectorMethodNodes instead.
+"
 Class {
-	#name : 'HypheReturnsCollectorStatic',
+	#name : 'HypheReturnsCollectorMessageSends',
 	#superclass : 'Object',
 	#instVars : [
 		'testCase',
@@ -13,22 +19,23 @@ Class {
 		'domainPackages',
 		'domainMethods'
 	],
-	#category : 'Hyphe',
-	#package : 'Hyphe'
+	#category : 'Hyphe-Collectors',
+	#package : 'Hyphe',
+	#tag : 'Collectors'
 }
 
 { #category : 'instance creation' }
-HypheReturnsCollectorStatic class >> on: aTestCase forPackages: packageNames [
+HypheReturnsCollectorMessageSends class >> on: aTestCase forPackages: packageNames [
     ^ self new initializeWith: aTestCase forPackages: packageNames
 ]
 
 { #category : 'instance creation' }
-HypheReturnsCollectorStatic class >> onMethod: aCompiledMethod forPackages: packageNames [
+HypheReturnsCollectorMessageSends class >> onMethod: aCompiledMethod forPackages: packageNames [
     ^ self new initializeForMethod: aCompiledMethod withPackages: packageNames
 ]
 
 { #category : 'cleanup' }
-HypheReturnsCollectorStatic >> cleanup [
+HypheReturnsCollectorMessageSends >> cleanup [
     "Clean up all instrumentation"
     logger log: 'Cleaning up instrumentation (', instrumentedMethods size asString, ' methods, ', installedLinks size asString, ' links)'.
     
@@ -48,7 +55,7 @@ HypheReturnsCollectorStatic >> cleanup [
 ]
 
 { #category : 'instrumentation' }
-HypheReturnsCollectorStatic >> collectDomainMethods [
+HypheReturnsCollectorMessageSends >> collectDomainMethods [
     "Traverse all packages and collect methods to instrument"
     logger log: '[COLLECT] Gathering methods from domain packages...'.
     
@@ -76,17 +83,17 @@ HypheReturnsCollectorStatic >> collectDomainMethods [
 ]
 
 { #category : 'accessing' }
-HypheReturnsCollectorStatic >> domainMethods [
+HypheReturnsCollectorMessageSends >> domainMethods [
     ^ domainMethods
 ]
 
 { #category : 'accessing' }
-HypheReturnsCollectorStatic >> domainPackages [
+HypheReturnsCollectorMessageSends >> domainPackages [
     ^ domainPackages
 ]
 
 { #category : 'initialization' }
-HypheReturnsCollectorStatic >> initializeForMethod: aCompiledMethod [
+HypheReturnsCollectorMessageSends >> initializeForMethod: aCompiledMethod [
     logger := HypheReturnsCollectorLogger new.
     result := HypheReturnsCollectorResult new.
     instrumentedMethods := IdentitySet new.
@@ -99,14 +106,14 @@ HypheReturnsCollectorStatic >> initializeForMethod: aCompiledMethod [
 ]
 
 { #category : 'initialization' }
-HypheReturnsCollectorStatic >> initializeForMethod: aCompiledMethod withPackages: packageNames [
+HypheReturnsCollectorMessageSends >> initializeForMethod: aCompiledMethod withPackages: packageNames [
     domainPackages := packageNames asArray.
     testCase := nil.
     self initializeForMethod: aCompiledMethod
 ]
 
 { #category : 'initialization' }
-HypheReturnsCollectorStatic >> initializeWith: aTestCase forPackages: packageNames [
+HypheReturnsCollectorMessageSends >> initializeWith: aTestCase forPackages: packageNames [
     "Initialize the collector for a test case and domain packages"
     testCase := aTestCase.
     domainPackages := packageNames asArray.
@@ -114,7 +121,7 @@ HypheReturnsCollectorStatic >> initializeWith: aTestCase forPackages: packageNam
 ]
 
 { #category : 'instrumentation' }
-HypheReturnsCollectorStatic >> instrumentDomainMethods [
+HypheReturnsCollectorMessageSends >> instrumentDomainMethods [
     "Instrument all methods in domain packages"
     logger log: '[INSTRUMENT] Starting instrumentation of ', domainMethods size asString, ' methods...'.
     
@@ -130,7 +137,7 @@ HypheReturnsCollectorStatic >> instrumentDomainMethods [
 ]
 
 { #category : 'instrumentation' }
-HypheReturnsCollectorStatic >> instrumentMethod: aCompiledMethod [
+HypheReturnsCollectorMessageSends >> instrumentMethod: aCompiledMethod [
     "Instrument a method with recording link only (no propagation).
     Install on send nodes to capture return values.
     SKIP inlined sends to avoid bytecode generation errors."
@@ -207,7 +214,7 @@ HypheReturnsCollectorStatic >> instrumentMethod: aCompiledMethod [
 ]
 
 { #category : 'instrumentation' }
-HypheReturnsCollectorStatic >> instrumentTestCase [
+HypheReturnsCollectorMessageSends >> instrumentTestCase [
     "Instrument the test method"
     | testMethod testSelector testClass |
     
@@ -224,12 +231,12 @@ HypheReturnsCollectorStatic >> instrumentTestCase [
 ]
 
 { #category : 'accessing' }
-HypheReturnsCollectorStatic >> logger [
+HypheReturnsCollectorMessageSends >> logger [
     ^ logger
 ]
 
 { #category : 'data collection' }
-HypheReturnsCollectorStatic >> recordReturnValue: returnValue fromReceiver: aReceiver [
+HypheReturnsCollectorMessageSends >> recordReturnValue: returnValue fromReceiver: aReceiver [
     "Record a return value. Method info must be inferred from receiver.
     This is the safest approach with minimal reifications."
     
@@ -278,7 +285,7 @@ HypheReturnsCollectorStatic >> recordReturnValue: returnValue fromReceiver: aRec
 ]
 
 { #category : 'data collection' }
-HypheReturnsCollectorStatic >> recordReturnValue: returnValue fromReceiver: aReceiver inContext: aContext [
+HypheReturnsCollectorMessageSends >> recordReturnValue: returnValue fromReceiver: aReceiver inContext: aContext [
     "Record a return value from a method execution.
     aContext is the execution context, from which we extract the method.
     Ultra-defensive: catch ALL errors to prevent breaking test execution."
@@ -357,7 +364,7 @@ HypheReturnsCollectorStatic >> recordReturnValue: returnValue fromReceiver: aRec
 ]
 
 { #category : 'data collection' }
-HypheReturnsCollectorStatic >> recordReturnValue: returnValue fromReceiver: aReceiver inMethod: aCompiledMethod [
+HypheReturnsCollectorMessageSends >> recordReturnValue: returnValue fromReceiver: aReceiver inMethod: aCompiledMethod [
     "Record a return value from a method execution with the actual receiver.
     Ultra-defensive: catch ALL errors to prevent breaking test execution."
     
@@ -416,7 +423,7 @@ HypheReturnsCollectorStatic >> recordReturnValue: returnValue fromReceiver: aRec
 ]
 
 { #category : 'data collection' }
-HypheReturnsCollectorStatic >> recordReturnValue: returnValue inMethod: aCompiledMethod [
+HypheReturnsCollectorMessageSends >> recordReturnValue: returnValue inMethod: aCompiledMethod [
     "Record a return value from a method execution.
     Ultra-defensive: catch ALL errors to prevent breaking test execution."
     
@@ -474,7 +481,7 @@ HypheReturnsCollectorStatic >> recordReturnValue: returnValue inMethod: aCompile
 ]
 
 { #category : 'instrumentation' }
-HypheReturnsCollectorStatic >> recordingLink [
+HypheReturnsCollectorMessageSends >> recordingLink [
     "Returns the single recording link for capturing return values.
     Only reifies value and receiver - no methodToExecute to avoid argument issues."
     
@@ -490,12 +497,12 @@ HypheReturnsCollectorStatic >> recordingLink [
 ]
 
 { #category : 'accessing' }
-HypheReturnsCollectorStatic >> result [
+HypheReturnsCollectorMessageSends >> result [
     ^ result
 ]
 
 { #category : 'running' }
-HypheReturnsCollectorStatic >> run [
+HypheReturnsCollectorMessageSends >> run [
     | startTime endTime testReturnValue testMethod |
     result status: #running.
     startTime := DateAndTime now.
@@ -529,7 +536,7 @@ HypheReturnsCollectorStatic >> run [
 ]
 
 { #category : 'running' }
-HypheReturnsCollectorStatic >> runOn: aReceiver method: aCompiledMethod [
+HypheReturnsCollectorMessageSends >> runOn: aReceiver method: aCompiledMethod [
     | startTime endTime returnValue |
     result status: #running.
     startTime := DateAndTime now.
@@ -562,14 +569,14 @@ HypheReturnsCollectorStatic >> runOn: aReceiver method: aCompiledMethod [
 ]
 
 { #category : 'instrumentation' }
-HypheReturnsCollectorStatic >> shouldInstrumentMethod: aCompiledMethod [
+HypheReturnsCollectorMessageSends >> shouldInstrumentMethod: aCompiledMethod [
     "Check if method has noInstrumentation or optionDisabledLink pragmas"
     ^ (aCompiledMethod hasPragmaNamed: #noInstrumentation) not
         and: [ (aCompiledMethod hasPragmaNamed: #optionDisabledLink) not ]
 ]
 
 { #category : 'instrumentation' }
-HypheReturnsCollectorStatic >> shouldSkipInstrumentingSend: selector [
+HypheReturnsCollectorMessageSends >> shouldSkipInstrumentingSend: selector [
     "Skip control flow methods and other problematic selectors.
     This is a selector-based check, complementing the AST node check."
     ^ #(ifTrue: ifFalse: ifTrue:ifFalse: ifFalse:ifTrue: 
@@ -583,7 +590,7 @@ HypheReturnsCollectorStatic >> shouldSkipInstrumentingSend: selector [
 ]
 
 { #category : 'instrumentation' }
-HypheReturnsCollectorStatic >> shouldSkipInstrumentingSendNode: aSendNode [
+HypheReturnsCollectorMessageSends >> shouldSkipInstrumentingSendNode: aSendNode [
     "Check if we should skip instrumenting this send node.
     Returns true if the node is inlined or otherwise problematic."
     

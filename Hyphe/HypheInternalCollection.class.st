@@ -4,8 +4,9 @@ Class {
 	#instVars : [
 		'isExecuting'
 	],
-	#category : 'Hyphe',
-	#package : 'Hyphe'
+	#category : 'Hyphe-Collectors',
+	#package : 'Hyphe',
+	#tag : 'Collectors'
 }
 
 { #category : 'adding' }
