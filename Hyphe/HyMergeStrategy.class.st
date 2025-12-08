@@ -2,7 +2,8 @@ Class {
 	#name : 'HyMergeStrategy',
 	#superclass : 'Object',
 	#instVars : [
-		'mergeResults'
+		'mergeResults',
+		'tools'
 	],
 	#category : 'Hyphe-Merge',
 	#package : 'Hyphe',
@@ -94,6 +95,22 @@ HyMergeStrategy >> strategyName [
     "Return name of this strategy for reporting"
 
     self subclassResponsibility
+]
+
+{ #category : 'initialization' }
+HyMergeStrategy >> tools [
+
+	^ tools
+
+	
+]
+
+{ #category : 'initialization' }
+HyMergeStrategy >> tools: toolSet [
+
+	tools := toolSet 
+
+	
 ]
 
 { #category : 'as yet unclassified' }

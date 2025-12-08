@@ -100,8 +100,8 @@ InferenceSettings class >> initialize [
 		                   at: 'Type Info Tools'
 		                   put: TITMethodReturnTypesGatherer;
 		                   at: 'Name-based Heuristics' put: TypeMeNameBased;
-		                   yourself.
-	"at: 'Offline Test Profiling' put ."
+								at: 'Offline Test Profiling' put: HypheReturnsCollectorMethodNodes;
+								yourself.
 ]
 
 { #category : 'accessing' }
@@ -113,7 +113,7 @@ InferenceSettings class >> joinData [
 { #category : 'mergeStrategies' }
 InferenceSettings class >> mergeStrategies [
 
-	^ { HyConsensusStrategy . HyTieredStrategy . HyWeightedVotingStrategy }
+	^ { HyConsensusStrategy . HyTieredStrategy . HyWeightedVotingStrategy . HyBiasedConsensusStrategy }
 ]
 
 { #category : 'mergeStrategies' }

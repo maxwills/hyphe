@@ -4,7 +4,8 @@ Class {
 	#instVars : [
 		'strategy',
 		'hyData',
-		'results'
+		'results',
+		'tools'
 	],
 	#category : 'Hyphe-Merge',
 	#package : 'Hyphe',
@@ -22,6 +23,15 @@ HyTypeMerger class >> newWithStrategy: aStrategy [
 
     ^ super new
         strategy: aStrategy;
+        yourself
+]
+
+{ #category : 'instance creation' }
+HyTypeMerger class >> newWithStrategy: aStrategy tools: tools [
+
+    ^ super new
+        strategy: aStrategy;
+		  tools: tools;
         yourself
 ]
 
@@ -151,11 +161,13 @@ HyTypeMerger >> labelForConfidence: conf [
 HyTypeMerger >> mergeForObject: anObject withTypes: typesCollection [
 
 
+	|str |
 	typesCollection ifEmpty: [
 			anObject confidence: 0.0.
 			^ self ].
 
-	^ strategy new mergeTypes: typesCollection
+	str := strategy new tools: tools.
+	^ str mergeTypes: typesCollection
 ]
 
 { #category : 'as yet unclassified' }
@@ -191,7 +203,7 @@ HyTypeMerger >> mergeMethodTypes: aMethod class: aClass package: aPackage [
 
 	aMethod
 		returnTypeConfidence: (result at: #confidence);
-		selectedReturnType: (result at: #types).
+		selectedReturnType:  ((result at: #types) first).
 
 	results add: (Dictionary new
 			 at: #packageName put: aPackage name;
@@ -204,7 +216,7 @@ HyTypeMerger >> mergeMethodTypes: aMethod class: aClass package: aPackage [
 				 (InferenceSettings resolveConfidenceLevel:
 						  (result at: #confidence));
 			 at: #sources put: (result at: #sources);
-			 at: #reasoning put: (result at: #reasoning);
+			 "at: #reasoning put: (result at: #reasoning);"
 			 yourself).
 
 
@@ -268,4 +280,16 @@ HyTypeMerger >> strategy [
 HyTypeMerger >> strategy: anObject [
 
 	strategy := anObject
+]
+
+{ #category : 'accessing' }
+HyTypeMerger >> tools [
+
+	^ tools
+]
+
+{ #category : 'accessing' }
+HyTypeMerger >> tools: anObject [
+
+	tools := anObject
 ]

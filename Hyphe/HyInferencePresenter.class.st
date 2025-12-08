@@ -327,7 +327,7 @@ HyInferencePresenter >> runInference [
 
 	self inform: 'Running analysis on ' , selectedPkgs size asString
 		, ' package(s) with ' , selectedTools size asString , ' tool(s)'.
-
+	 
 	results := (InferenceExecutor
 		            executeWithPackages: selectedPkgs
 		            tools: selectedTools
