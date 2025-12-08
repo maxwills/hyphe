@@ -1,9 +1,9 @@
 Class {
 	#name : 'HypheLogger',
 	#superclass : 'Object',
-	#category : 'Hyphe-Tool',
+	#category : 'Hyphe-Injection',
 	#package : 'Hyphe',
-	#tag : 'Tool'
+	#tag : 'Injection'
 }
 
 { #category : 'streaming' }

@@ -7,9 +7,9 @@ Class {
 	#classVars : [
 		'UniqueInstance'
 	],
-	#category : 'Hyphe-StaticInference',
+	#category : 'Hyphe-Injection',
 	#package : 'Hyphe',
-	#tag : 'StaticInference'
+	#tag : 'Injection'
 }
 
 { #category : 'accessing' }
