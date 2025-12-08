@@ -23,13 +23,14 @@ BaselineOfHyphe >> baseline: spec [
 				baseline: 'HypheTools'
 				with: [ spec repository: 'github://hyalinos/hyphe-tools:main/src' ];
 				baseline: 'TypeInfoTools'
-				with: [ spec repository: 'github://lsafina/TypeInfoTools:main' ].
+				with: [ spec repository: 'github://lsafina/TypeInfoTools:main'.
+					spec loads: 'dev' ].
 
 			spec
 				package: #Hyphe with: [
 						spec requires:
 								#( 'TypeMe' 'MethodProxies' 'TypeInfoTools-StatsCollector' 'TypeInfoTools-Core').
-						spec includes: #( 'HypheTools' 'TypeInfoTools' ) ];
+						spec includes: #( 'HypheTools' ) ];
 				package: #'Hyphe-Tests' with: [ spec requires: #( 'Hyphe' ) ];
 				package: #Mycelium
 				with: [ spec repository: 'github://hyalinos/mycelium:main' ].
