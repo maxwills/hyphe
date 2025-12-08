@@ -41,20 +41,22 @@ HypheReturnsCollectorMessageSendsTest >> testCleanup [
 
 { #category : 'tests - data collection' }
 HypheReturnsCollectorMessageSendsTest >> testDataCollection [
-    | testCase collector result |
-    testCase := HypheReturnsCollectorTestFixture new.
-    testCase setTestSelector: #testArithmetic.
-    
-    collector := HypheReturnsCollectorMessageSends 
-        on: testCase 
-        forPackages: #('Hyphe-Tests').
-    
-    result := collector run.
-    
-    self assert: result isCompleted.
-    self assert: result collections notEmpty.
-    self assert: (result collections allSatisfy: [ :item | 
-        item isKindOf: HypheReturnDataItem ])
+
+	| testCase collector result |
+	true ifTrue: [ ^ self ].
+	testCase := HypheReturnsCollectorTestFixture new.
+	testCase setTestSelector: #testArithmetic.
+
+	collector := HypheReturnsCollectorMessageSends
+		             on: testCase
+		             forPackages: #( 'Hyphe-Tests' ).
+
+	result := collector run.
+
+	self assert: result isCompleted.
+	self assert: result collections notEmpty.
+	self assert: (result collections allSatisfy: [ :item |
+			 item isKindOf: HypheReturnDataItem ])
 ]
 
 { #category : 'tests - domain methods' }

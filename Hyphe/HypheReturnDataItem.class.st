@@ -54,6 +54,12 @@ HypheReturnDataItem >> receiverClass: aClass [
     receiverClass := aClass
 ]
 
+{ #category : 'as yet unclassified' }
+HypheReturnDataItem >> replaceTrueFalseWithBoolean [
+(returnClass =True) ifTrue: [ returnClass:= Boolean ].
+(returnClass =False) ifTrue: [ returnClass:= Boolean ].
+]
+
 { #category : 'accessing' }
 HypheReturnDataItem >> returnClass [
     ^ returnClass

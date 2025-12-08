@@ -16,6 +16,12 @@ HypheReturnDataProcessor class >> process: aCollection [
         process
 ]
 
+{ #category : 'as yet unclassified' }
+HypheReturnDataProcessor class >> treatTrueFalseAsBoolean [
+"If set to false, the class of returns of methods returning true or false will count separately as True and False instead of Boolean"
+	^ true
+]
+
 { #category : 'private' }
 HypheReturnDataProcessor >> countReturnClasses: items [
     | counts |
@@ -55,40 +61,46 @@ HypheReturnDataProcessor >> groupByMethod [
 
 { #category : 'processing' }
 HypheReturnDataProcessor >> process [
-    | processedReturns grouped |
-    processedReturns := HypheProcessedReturns new.
-    
-    "Group items by receiverClass>>#methodSelector"
-    grouped := self groupByMethod.
-    
-    "Process each group"
-    grouped keysAndValuesDo: [ :key :items |
-        | processedItem returnClassCounts totalCount |
-        
-        "Create processed item with method info from first item"
-        processedItem := HypheProcessedReturnsItem new
-            receiverClass: items first receiverClass
-            methodSelector: items first methodSelector
-            definingClass: items first definingClass.
-        
-        "Count return classes"
-        returnClassCounts := self countReturnClasses: items.
-        totalCount := returnClassCounts values sum.
-        
-        "Create HypheReturnsInfo for each return class"
-        returnClassCounts keysAndValuesDo: [ :returnClass :count |
-            | percentage returnsInfo |
-            percentage := count / totalCount asFloat.
-            returnsInfo := HypheReturnsInfo new
-                returnClass: returnClass
-                count: count
-                percentage: percentage.
-            processedItem addReturnsInfo: returnsInfo ].
-        
-        processedReturns at: key put: processedItem ].
-    
-    "Build organized views by package and receiver class"
-    processedReturns buildOrganizedViews.
-    
-    ^ processedReturns
+
+	| processedReturns grouped |
+	processedReturns := HypheProcessedReturns new.
+	(self class treatTrueFalseAsBoolean) ifTrue: [ self replaceTrueFalseWithBoolean ].
+	"Group items by receiverClass>>#methodSelector"
+	grouped := self groupByMethod.
+
+	"Process each group"
+	grouped keysAndValuesDo: [ :key :items |
+			| processedItem returnClassCounts totalCount |
+			"Create processed item with method info from first item"
+			processedItem := HypheProcessedReturnsItem new
+				                 receiverClass: items first receiverClass
+				                 methodSelector: items first methodSelector
+				                 definingClass: items first definingClass.
+
+			"Count return classes"
+			returnClassCounts := self countReturnClasses: items.
+			totalCount := returnClassCounts values sum.
+
+			"Create HypheReturnsInfo for each return class"
+			returnClassCounts keysAndValuesDo: [ :returnClass :count |
+					| percentage returnsInfo |
+					percentage := count / totalCount asFloat.
+					returnsInfo := HypheReturnsInfo new
+						               returnClass: returnClass
+						               count: count
+						               percentage: percentage.
+					processedItem addReturnsInfo: returnsInfo ].
+
+			processedReturns at: key put: processedItem ].
+
+	"Build organized views by package and receiver class"
+	processedReturns buildOrganizedViews.
+
+	^ processedReturns
+]
+
+{ #category : 'as yet unclassified' }
+HypheReturnDataProcessor >> replaceTrueFalseWithBoolean [
+
+	dataItems do: [ :each| each replaceTrueFalseWithBoolean ]
 ]
