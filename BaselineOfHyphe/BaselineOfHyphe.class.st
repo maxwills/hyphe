@@ -77,9 +77,9 @@ BaselineOfHyphe >> initializeTypeStorage [
 
 { #category : 'baselines' }
 BaselineOfHyphe >> postload [
-
+	[ 
 	self downloadAvailableTypes.
 	self initializeTypeStorage.
-	
+	] on: Error do: [ :ex| Transcript showCr: 'Error on postload baseline: ',ex asString ]
 	
 ]
