@@ -83,15 +83,19 @@ HypheReturnsCollectorMethodNodesTest >> testDataCollectionCapturesReturnValue [
 
 { #category : 'tests' }
 HypheReturnsCollectorMethodNodesTest >> testErrorHandling [
-    | testCase collector result |
-    testCase := HypheReturnsCollectorTestFixture new.
-    
-    collector := HypheReturnsCollectorMethodNodes new.
-    result := collector runTest: testCase selector: #testThatFails instrumentForRecording: true.
-   
-    
-    self assert: result notNil.
-    self assert: result hasErrors
+
+	| testCase collector result |
+	testCase := HypheReturnsCollectorTestFixture new.
+
+	collector := HypheReturnsCollectorMethodNodes new.
+	result := collector
+		          runTest: testCase
+		          selector: #testThatFails
+		          instrumentForRecording: true.
+
+
+	self assert: result notNil.
+	self assert: result status equals: #testFailure
 ]
 
 { #category : 'tests - result' }
