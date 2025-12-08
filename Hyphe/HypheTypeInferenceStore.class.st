@@ -7,9 +7,9 @@ Class {
 	#classVars : [
 		'UniqueInstance'
 	],
-	#category : 'Hyphe-Inference',
+	#category : 'Hyphe-StaticInference',
 	#package : 'Hyphe',
-	#tag : 'Inference'
+	#tag : 'StaticInference'
 }
 
 { #category : 'accessing' }
@@ -26,6 +26,7 @@ HypheTypeInferenceStore class >> current [
 
 { #category : 'accessing' }
 HypheTypeInferenceStore class >> reload [
+<script>
 	"Force reload the CSV data"
 	self reset.
 	^ self current
@@ -74,6 +75,45 @@ HypheTypeInferenceStore >> inferenceForClass: aClass selector: aSelector [
 ]
 
 { #category : 'querying' }
+HypheTypeInferenceStore >> inferenceForClassName: aClassName selector: aSelector [
+	"Return {inferredType. confidence} or nil if not found.
+	 Searches for exact class match first, then walks superclass chain."
+	| key |
+	
+		key := aClassName asString , '>' , '>' , aSelector asString.
+		^inferenceData at: key ifAbsent: [HypheLogger showCr:'keyNotFound: ',key . nil ].
+		
+]
+
+{ #category : 'querying' }
+HypheTypeInferenceStore >> inferenceForClassName: aClassName selector: aSelector withFallback: useFallback [
+    "Return {inferredType. confidence} or nil if not found.
+     If withFallback is true and exact match not found, try *r>>selector as fallback.
+     Lookup strategy:
+       1. Try exact match: ClassName>>selector
+       2. If useFallback and not found: try *r>>selector (generic)"
+    | key result |
+    
+    "Try exact match first"
+    key := aClassName asString , '>>' , aSelector asString.
+    result := inferenceData at: key ifAbsent: [ nil ].
+    result ifNotNil: [ ^ result ].
+    
+    "If fallback enabled, try generic *r>>selector entry"
+    useFallback ifTrue: [
+        key := '*r>>' , aSelector asString.
+        result := inferenceData at: key ifAbsent: [ nil ].
+        result ifNotNil: [ 
+            HypheLogger showCr: '    Using fallback *r entry for selector: ', aSelector asString.
+            ^ result ].
+    ].
+    
+    "Not found"
+    HypheLogger showCr: '    Key not found: ', aClassName asString, '>>', aSelector asString.
+    ^ nil
+]
+
+{ #category : 'querying' }
 HypheTypeInferenceStore >> inferredTypeForClass: aClass selector: aSelector [
 	"Return the inferred type string or nil"
 	| result |
@@ -93,7 +133,7 @@ HypheTypeInferenceStore >> loadFromCSV [
 	| csvFile lines |
 	inferenceData := Dictionary new.
 	csvFile := self class csvPath.
-	csvFile exists ifFalse: [ ^ self ].
+	csvFile exists ifFalse: [Transcript showCr: 'Hyphe: typeToConfidence.csv not found.'. ^ self ].
 	
 	lines := csvFile contents lines.
 	lines size > 1 ifFalse: [ ^ self ].
