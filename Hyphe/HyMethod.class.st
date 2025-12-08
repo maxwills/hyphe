@@ -5,7 +5,8 @@ Class {
 		'name',
 		'parameters',
 		'returnTypes',
-		'returnTypeConfidence'
+		'returnTypeConfidence',
+		'selectedReturnType'
 	],
 	#category : 'Hyphe-Data',
 	#package : 'Hyphe',
@@ -144,6 +145,12 @@ HyMethod >> parameters: anObject [
 ]
 
 { #category : 'accessing' }
+HyMethod >> returnTypeConfidence [
+
+	^ returnTypeConfidence
+]
+
+{ #category : 'accessing' }
 HyMethod >> returnTypeConfidence: anObject [
 
 	returnTypeConfidence := anObject
@@ -159,4 +166,16 @@ HyMethod >> returnTypes [
 HyMethod >> returnTypes: anObject [
 
 	returnTypes := anObject
+]
+
+{ #category : 'accessing' }
+HyMethod >> selectedReturnType [
+
+	^ selectedReturnType
+]
+
+{ #category : 'accessing' }
+HyMethod >> selectedReturnType: selectedType [
+
+	selectedReturnType := selectedType 
 ]

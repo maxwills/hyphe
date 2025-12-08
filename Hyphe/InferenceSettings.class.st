@@ -26,10 +26,10 @@ Class {
 { #category : 'class initialization' }
 InferenceSettings class >> defaultConfidence [ 
 
-	^ OrderedCollection new 
-		  add: {'0.0'. '0.6'. 'Low'};
-		  add: {'0.61'. '0.8'. 'Medium'};
-		  add: {'0.81'. '1.0'. 'High'};
+	^ Dictionary new 
+		  at: 'Low' put: #(0.0 0.6);
+		  at: 'Medium' put: #(0.61  0.8);
+		  at: 'High' put: #(0.81 1.0);
 		  yourself
 ]
 
@@ -87,7 +87,7 @@ InferenceSettings class >> initialize [
 		yourself. 
 		"at: 'Offline Test Profiling' put ."
 	defaultMergeStrategy := HyWeightedVotingStrategy.
-	mergeStrategies := Set withAll: (HyWeightedVotingStrategy, HyTieredStrategy, HyConsensusStrategy).
+	mergeStrategies := Set withAll: {HyWeightedVotingStrategy . HyTieredStrategy . HyConsensusStrategy}.
 		
 ]
 
@@ -99,26 +99,34 @@ InferenceSettings class >> joinData [
 
 { #category : 'class initialization' }
 InferenceSettings class >> recalculate [
-
-	| confidenceRanges |
-	confidenceRanges := self inferenceConfidence.
 	
 	joinData := self inferenceTools collect: [ :tool |
 		| toolName toolConfidence verbalConfidence |
 		toolName := tool at: 1.
 		toolConfidence := tool at: 2.
-		verbalConfidence := confidenceRanges 
-			detect: [ :range | 
-				| minValue maxValue |
-				minValue := (range at: 1) asNumber.
-				maxValue := (range at: 2) asNumber.
-				toolConfidence asNumber between: minValue and: maxValue ]
-			ifFound: [ :range | range at: 3 ]
-			ifNone: [ 'Unknown' ].
 		
-		{ toolName . toolConfidence . verbalConfidence } ].
+		verbalConfidence := self resolveConfidenceLevel: toolConfidence. 
+		
+		{ toolName . toolConfidence . verbalConfidence } 
+	].
 	
 	^ joinData 
+]
+
+{ #category : 'class initialization' }
+InferenceSettings class >> resolveConfidenceLevel: toolConfidence [ 
+
+	self inferenceConfidence keysAndValuesDo:[:level :range |
+		| minValue maxValue |
+		
+		minValue := (range first) asNumber.
+		maxValue := (range last) asNumber.
+		(toolConfidence asNumber between: minValue and: maxValue) ifTrue: [ ^ level ]
+	].
+		
+	^ 'Unknown'.	
+	
+	
 ]
 
 { #category : 'class initialization' }
