@@ -45,9 +45,9 @@ InferenceSettings class >> defaultTools [
 
 	^ OrderedCollection new
 		add: {'AST-based inference' . '1.0'};
-		add: {'Type Info Tools'. '0.75'};
+		add: {'Type Info Tools'. '0.8'};
 		add: {'Name-based Heuristics'. '0.5'};
-		add: {'Offline Test Profiling'. '0.5'};
+		add: {'Offline Test Profiling'. '0.6'};
 		yourself
 ]
 

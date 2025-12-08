@@ -37,6 +37,7 @@ HyWeightedVotingStrategy >> mergeTypes: typesCollection [
 	typesCollection do: [ :hyType |
 			| weight typeStr source |
 			typeStr := hyType name.
+
 			source := InferenceSettings inferenceTools select: [ :a |
 				          a first = hyType source ].
 			source

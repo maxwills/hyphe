@@ -128,7 +128,7 @@ InferenceExecutor >> processRepository: repoName packages: packageNames [
 	inferenceResults := HyDataRepresentation new.
     
     tools do: [:toolClass |
-        | result rawResult |
+        | rawResult |
         rawResult := toolClass runHypheInference: packageNames. 
 		  toolClass hypheExporter export: rawResult to: inferenceResults .
 		].
