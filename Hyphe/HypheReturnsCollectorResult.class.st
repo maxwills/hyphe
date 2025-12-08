@@ -17,6 +17,13 @@ HypheReturnsCollectorResult >> addCollection: aCollection [
     collections add: aCollection
 ]
 
+{ #category : 'converting' }
+HypheReturnsCollectorResult >> asProcessedResults [
+|processedResults|
+processedResults := HypheReturnDataProcessor process: self collections.
+^processedResults 
+]
+
 { #category : 'accessing' }
 HypheReturnsCollectorResult >> collections [
     ^ collections
