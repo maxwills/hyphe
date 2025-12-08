@@ -346,7 +346,7 @@ HypheReturnsCollectorMethodNodes >> processPackages: aCollectionOfPackageNames [
                 
                 "Use runCaseForHyphe for proper setup/tearDown"
                 [ testCase runCaseForHyphe ] 
-                    on: Error ",TestFailure , TestSkipped, AssertionFailure"
+                    on: Error ,TestFailure , TestSkipped, AssertionFailure
                     do: [ :ex |
                         logger log: '[PROCESS] Test failed/error: ', testCase class name, '>>', selector, ' - ', ex messageText
                     ]

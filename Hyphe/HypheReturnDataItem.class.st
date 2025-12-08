@@ -34,14 +34,14 @@ HypheReturnDataItem >> methodSelector: aSelector [
 
 { #category : 'printing' }
 HypheReturnDataItem >> printOn: aStream [
-    aStream
-        nextPutAll: receiverClass printString;
-        nextPutAll: ' >> ';
-        nextPutAll: methodSelector printString;
-        nextPutAll: ' (in ';
-        nextPutAll: definingClass printString;
-        nextPutAll: ') returns ';
-        nextPutAll: returnClass printString
+    
+        receiverClass printOn: aStream.
+		  aStream nextPutAll: ' ('.
+        definingClass printOn: aStream.
+        aStream nextPutAll: ') >> '.
+        methodSelector printOn: aStream.
+        aStream nextPutAll: ' -> '.        
+        returnClass printOn: aStream
 ]
 
 { #category : 'accessing' }

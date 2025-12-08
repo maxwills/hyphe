@@ -52,6 +52,16 @@ HypheReturnsCollectorBase >> instrumentForRecording [
     self subclassResponsibility
 ]
 
+{ #category : 'testing' }
+HypheReturnsCollectorBase >> isTestFailure: anError [
+|errorClassName|
+errorClassName:=anError class name .
+(errorClassName = #TestFailure) ifTrue: [ ^true ].
+(errorClassName = #TestSkipped) ifTrue: [ ^true ].
+(errorClassName = #AssertionFailure) ifTrue: [ ^true ].
+^false
+]
+
 { #category : 'accessing' }
 HypheReturnsCollectorBase >> logger [
     ^ logger
@@ -191,8 +201,8 @@ HypheReturnsCollectorBase >> runMultipleTests: aCollectionOfPairs instrumentForR
             
             result status: #completed.
             logger log: 'All tests completed successfully'
-        ] on: Error do: [ :ex |
-            result status: (ex class name = #TestFailure
+        ] on: Error ,TestFailure , TestSkipped, AssertionFailure do: [ :ex |
+            result status: ((self isTestFailure: ex)
                 ifTrue: [ #testFailure ]
                 ifFalse: [ #error ]).
             result errorMessage: ex messageText.
@@ -232,8 +242,8 @@ HypheReturnsCollectorBase >> runTest: aTestCase selector: aSymbol instrumentForR
             
             result status: #completed.
             logger log: 'Test completed successfully'
-        ] on: Error do: [ :ex |
-            result status: (ex class name = #TestFailure
+        ] on: Error ,TestFailure , TestSkipped, AssertionFailure do: [ :ex |
+            result status: ((self isTestFailure: ex)
                 ifTrue: [ #testFailure ]
                 ifFalse: [ #error ]).
             result errorMessage: ex messageText.
