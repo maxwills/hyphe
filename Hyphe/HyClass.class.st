@@ -150,8 +150,8 @@ HyClass >> updateMethod: newMethod [
 	| oldMethod |
 	
 	oldMethod := self getMethodNamed: (newMethod name).
-	(oldMethod equals: newMethod) ifFalse: [ 
-		oldMethod updateParameters: newMethod parameters.
+	(oldMethod = newMethod) ifFalse: [ 
+		"oldMethod updateParameters: newMethod parameters."
 		oldMethod updataReturnTypes: newMethod returnTypes.
 	]
 ]

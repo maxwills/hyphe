@@ -36,7 +36,11 @@ FlatDataCollector >> initialize [
 { #category : 'visiting' }
 FlatDataCollector >> visitMethod: m [
 
-	(m collected) accept: self
+	|calculatedTypes|
+	calculatedTypes := m collected.
+	calculatedTypes ifNotEmpty: [   
+		calculatedTypes accept: self
+	]
 ]
 
 { #category : 'visiting' }

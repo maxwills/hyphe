@@ -130,7 +130,8 @@ HyMethod >> initialize [
 
 	super initialize.
 	returnTypes := OrderedCollection new.
-	parameters := OrderedCollection new
+	parameters := OrderedCollection new.
+	collected := OrderedCollection new.
 ]
 
 { #category : 'accessing' }
@@ -167,4 +168,9 @@ HyMethod >> returnTypes [
 HyMethod >> returnTypes: anObject [
 
 	returnTypes := anObject
+]
+
+{ #category : 'as yet unclassified' }
+HyMethod >> updataReturnTypes: newTypesCollection [ 
+	 returnTypes do: [:r | newTypesCollection do: [:n | (r equals: n) ifFalse: [ returnTypes add: n ] ]  ]
 ]

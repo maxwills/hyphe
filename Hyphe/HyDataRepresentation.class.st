@@ -72,12 +72,6 @@ HyDataRepresentation class >> defaultFilePath [
 ]
 
 { #category : 'accessing' }
-HyDataRepresentation class >> exportToCSV [
-
-	^ self exportToJsonFile: filePath
-]
-
-{ #category : 'accessing' }
 HyDataRepresentation class >> exportToJson [
 
 	^ self exportToJsonFile: filePath
@@ -126,7 +120,7 @@ HyDataRepresentation class >> filePath: anObject [
 HyDataRepresentation class >> fromJsonFile: aPath [
 
 	| data |
-	aPath asFileReference readStreamDo: [ :stream |
+	aPath readStreamDo: [ :stream |
 		data := (NeoJSONReader on: stream) next ].
 	
 	data do: [ :packageDict |

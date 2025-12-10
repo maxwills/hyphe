@@ -31,6 +31,18 @@ Mycelium class >> defaultFolder: anObject [
 	defaultFolder := anObject
 ]
 
+{ #category : 'class initialization' }
+Mycelium class >> erase [
+
+	mycelium := HyDataRepresentation initialize.	
+]
+
+{ #category : 'accessing' }
+Mycelium class >> exportFromDisk [
+
+	((FileLocator imageDirectory / 'data') children) do: [: file | mycelium fromJsonFile: file]. 
+]
+
 { #category : 'accessing' }
 Mycelium class >> exportFromJson: filePath [
 
@@ -40,7 +52,7 @@ Mycelium class >> exportFromJson: filePath [
 { #category : 'accessing' }
 Mycelium class >> exportToCSV [ 
 
-	mycelium exportToCSV
+	HyCSVExporter exportToFile
 ]
 
 { #category : 'class initialization' }
