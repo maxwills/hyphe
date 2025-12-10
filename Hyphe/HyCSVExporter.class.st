@@ -14,6 +14,13 @@ HyCSVExporter class >> collectionAddRow [
 ]
 
 { #category : 'as yet unclassified' }
+HyCSVExporter class >> collectionCreateRow [ 
+	
+	^ #('new' 'OrderedCollection' 'OrderedCollection' '0.9' 'High')
+
+]
+
+{ #category : 'as yet unclassified' }
 HyCSVExporter class >> exportToFile [ 
 	
 	|file data|
@@ -37,6 +44,7 @@ HyCSVExporter class >> exportToStream: aStream data: anOrderedCollection [
 	
 	writer nextPut: self headerRow.
 	writer nextPut: self collectionAddRow.
+	writer nextPut: self collectionCreateRow.
 	writer nextPut: self yourselfRow.
 	anOrderedCollection do: [ :dict |
 		writer nextPut: (self rowFromDictionary: dict) ].
