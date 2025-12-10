@@ -66,7 +66,10 @@ BaselineOfHyphe >> initialize [
 BaselineOfHyphe >> initializeTypeStorage [
 
 	Mycelium  exportFromJson: 
-		( FileLocator imageDirectory / 'data' ) files
+		( FileLocator imageDirectory / 'data' ) files.
+	Mycelium exportToCSV.
+	Mycelium update. 
+	
 ]
 
 { #category : 'baselines' }
